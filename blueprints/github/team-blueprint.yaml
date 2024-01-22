@@ -1,0 +1,16 @@
+---
+apiVersion: team.github.upbound.io/v1alpha1
+kind: Team
+metadata:
+  name: {{ teamName | lower }}
+  namespace: github-resources
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    name: {{ teamName }}
+    {% if parentTeamId %}
+    parentTeamId: {{ parentTeamId }}
+    {% endif %}
+  providerConfigRef:
+    name: rancher-eio
+

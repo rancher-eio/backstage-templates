@@ -1,0 +1,40 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: team-template
+  title: GitHub Team Creation Template
+  description: Template for creating a GitHub team
+spec:
+  owner: "eio"
+  type: service
+
+  parameters:
+    - title: GitHub Team Details
+      required:
+        - teamName
+      properties:
+        teamName:
+          title: Team Name
+          type: string
+          description: Name of the GitHub team
+        parentTeamId:
+          title: Parent Team ID
+          type: number
+          description: (Optional) ID of the parent GitHub team for nested teams
+
+  steps:
+    - id: template
+      name: Fill Template
+      action: fetch:team-blueprint
+      input:
+        url: ./blueprints/github/team-blueprint
+        values:
+          teamName: ${{ parameters.teamName }}
+          parentTeamId: ${{ parameters.parentTeamId }}
+
+    - id: publish
+      name: Publish YAML
+      action: publish:file
+      input:
+        path: './generated/team.yaml'
+        targetPath: './k8s'
