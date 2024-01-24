@@ -30,7 +30,7 @@ spec:
   steps:
     - id: template
       name: Fill Template
-      action: fetch:team-template
+      action: fetch:template
       input:
         url: https://raw.githubusercontent.com/rancher-eio/backstage-templates/main/blueprints/github/team-blueprint.yaml
         values:
