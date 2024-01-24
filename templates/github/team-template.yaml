@@ -39,7 +39,7 @@ spec:
 
     - id: publish-pr
       name: Publish Pull Request
-      action: publish:github-pull-request
+      action: publish:github:pull-request
       input:
         repoUrl: https://github.com/rancher-eio/kitchen
         title: "Add new team"
