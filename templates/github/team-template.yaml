@@ -43,7 +43,7 @@ spec:
       input:
         repoUrl: https://github.com/rancher-eio/kitchen
         title: "Add new team"
-        body: "This PR adds a new team"
+        description: "This PR adds a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
         files:
