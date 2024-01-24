@@ -12,5 +12,5 @@ spec:
     parentTeamId: {{ parentTeamId }}
     {% endif %}
   providerConfigRef:
-    name: rancher-eio
+    name:  {{ orgName | lower }}
 
