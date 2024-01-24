@@ -32,8 +32,8 @@ spec:
       name: Fill Template
       action: fetch:template
       input:
-        #url: https://raw.githubusercontent.com/rancher-eio/backstage-templates/main/blueprints/github/team-blueprint.yaml
-        url: ../../blueprints/github/team-blueprint.yaml
+        url: https://raw.githubusercontent.com/rancher-eio/backstage-templates/main/blueprints/github/team-blueprint.yaml
+        #url: ../../blueprints/github/team-blueprint.yaml
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
