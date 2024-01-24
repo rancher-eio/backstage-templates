@@ -41,7 +41,7 @@ spec:
       name: Publish Pull Request
       action: publish:github:pull-request
       input:
-        repoUrl: github.com/rancher-eio/test
+        repoUrl: github.com?repo=test&owner=rancher-eio
         title: "Add new team"
         description: "This PR adds a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
