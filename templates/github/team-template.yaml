@@ -7,7 +7,6 @@ metadata:
 spec:
   owner: "eio"
   type: service
-
   parameters:
     - title: GitHub Team Details
       required:
@@ -32,7 +31,8 @@ spec:
       name: Fill Template
       action: fetch:template
       input:
-        url: https://raw.githubusercontent.com/rancher-eio/backstage-templates/main/blueprints/github
+        url: https://github.com/rancher-eio/backstage-templates/tree/main/blueprints/github
+        #https://raw.githubusercontent.com/rancher-eio/backstage-templates/main/blueprints/github
         #url: ../../blueprints/github/team-blueprint.yaml
         values:
           teamName: ${{ parameters.teamName }}
