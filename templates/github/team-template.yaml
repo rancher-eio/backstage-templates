@@ -32,16 +32,19 @@ spec:
       action: fetch:template
       input:
         url: https://github.com/rancher-eio/backstage-templates/tree/main/blueprints/github
-        #https://raw.githubusercontent.com/rancher-eio/backstage-templates/main/blueprints/github
-        #url: ../../blueprints/github/team-blueprint.yaml
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
 
-    - id: publish
-      name: Publish YAML
-      action: publish:file
+    - id: publish-pr
+      name: Publish Pull Request
+      action: publish:github-pull-request
       input:
-        path: './generated/team.yaml'
-        targetPath: './k8s'
+        repoUrl: https://github.com/rancher-eio/kitchen
+        title: "Add new team"
+        body: "This PR adds a new team"
+        branchName: "add-new-team-${{ parameters.teamName }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files:
+          '**/*.yaml': 'manifests/github-resources/resources/Team/'
