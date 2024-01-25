@@ -1,14 +1,14 @@
 apiVersion: team.github.upbound.io/v1alpha1
 kind: Team
 metadata:
-  name: ${{ parameters.teamName | lower }}
+  name: ${{ values.teamName | lower }}
   namespace: github-resources
 spec:
   deletionPolicy: Orphan
   forProvider:
-    name: ${{ parameters.teamName }}
-    # {% if parameters.parentTeamId %}
-    # parentTeamId: ${{ parameters.parentTeamId }}
-    # {% endif %}
+    name: ${{ values.teamName }}
+    {% if values.parentTeamId %}
+    parentTeamId: ${{ values.parentTeamId }}
+    {% endif %}
   providerConfigRef:
-    name: ${{ parameters.orgName | lower }}
+    name: ${{ values.orgName | lower }}
