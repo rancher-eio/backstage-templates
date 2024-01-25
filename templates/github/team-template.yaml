@@ -27,28 +27,24 @@ spec:
           description: (Optional) ID of the parent GitHub team for nested teams
 
   steps:
-    - id: template
-      name: Fill Template
+    - id: fetch-base
+      name: Fetch Base Template
       action: fetch:template
       input:
         url: https://github.com/rancher-eio/backstage-templates/tree/main/blueprints/github
-        targetPath: skeleton
+        targetPath: content
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
-        script:
-          - echo "printing template results..."
-          - ls ./skeleton
-          - echo "done with results"
 
-    - id: rename_file
-      name: Rename templated file
-      action: fs:rename
-      input:
-        files:
-          - from: ./skeleton/template_blueprint.yaml
-            to: ./skeleton/${{ parameters.teamName }}.yaml
+    # - id: rename_file
+    #   name: Rename templated file
+    #   action: fs:rename
+    #   input:
+    #     files:
+    #       - from: ./skeleton/template_blueprint.yaml
+    #         to: ./skeleton/${{ parameters.teamName }}.yaml
 
     - id: publish-pr
       name: Publish Pull Request
@@ -59,7 +55,7 @@ spec:
         description: "This PR adds a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
-        sourcePath: ./skeleton
+        sourcePath: ./content
         targetPath: ./manifests/github-resources/resources/Team/
         # files:
         #   '**/*.yaml': 'manifests/github-resources/resources/Team/'
