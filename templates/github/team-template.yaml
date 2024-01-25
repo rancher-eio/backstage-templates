@@ -32,11 +32,20 @@ spec:
       action: fetch:template
       input:
         url: https://github.com/rancher-eio/backstage-templates/tree/main/blueprints/github
+        #targetPath: skeleton
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
-
+        script:
+          - echo "Debug: teamName = ${{ parameters.teamName }}"
+    # - id: rename_file
+    #   name: Rename templated file
+    #   action: fs:rename
+    #   input:
+    #     files:
+    #       - from: ./skeleton/template_blueprint.yaml
+    #         to: ./skeleton/${{ parameters.teamName }}.yaml
     - id: publish-pr
       name: Publish Pull Request
       action: publish:github:pull-request

@@ -7,8 +7,8 @@ spec:
   deletionPolicy: Orphan
   forProvider:
     name: ${{ parameters.teamName }}
-    {% if parameters.parentTeamId %}
-    parentTeamId: ${{ parameters.parentTeamId }}
-    {% endif %}
+    # {% if parameters.parentTeamId %}
+    # parentTeamId: ${{ parameters.parentTeamId }}
+    # {% endif %}
   providerConfigRef:
     name: ${{ parameters.orgName | lower }}
