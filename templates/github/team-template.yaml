@@ -32,13 +32,13 @@ spec:
       action: fetch:template
       input:
         url: https://github.com/rancher-eio/backstage-templates/tree/main/blueprints/github
-        #targetPath: skeleton
+        targetPath: skeleton
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
         script:
-          - echo "Debug: teamName = ${{ parameters.teamName }}"
+          - ls skeleton
     # - id: rename_file
     #   name: Rename templated file
     #   action: fs:rename
@@ -55,5 +55,7 @@ spec:
         description: "This PR adds a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
-        files:
-          '**/*.yaml': 'manifests/github-resources/resources/Team/'
+        sourcePath: ./skeleton
+        targetPath: ./manifests/github-resources/resources/Team/
+        # files:
+        #   '**/*.yaml': 'manifests/github-resources/resources/Team/'
