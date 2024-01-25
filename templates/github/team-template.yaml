@@ -47,16 +47,16 @@ spec:
       action: fs:rename
       input:
         files:
-          - from: ./skeleton/template-blueprint.yaml
-            to: ./skeleton/${{ parameters.teamName }}.yaml
+          - from: ./content/template-blueprint.yaml
+            to: ./content/${{ parameters.teamName }}.yaml
 
     - id: publish-pr
       name: Publish Pull Request
       action: publish:github:pull-request
       input:
         repoUrl: github.com?repo=kitchen&owner=rancher-eio
-        title: "Add new team"
-        description: "This PR adds a new team"
+        title: "Creating team - ${{ parameters.teamName }}"
+        description: "This PR creates a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
         reviewers: ${{ parameters.manager }}
