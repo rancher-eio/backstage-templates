@@ -12,7 +12,6 @@ spec:
       required:
         - teamName
         - orgName
-        - manager
       properties:
         orgName:
           title: Github Org
@@ -27,9 +26,9 @@ spec:
           type: number
           description: (Optional) ID of the parent GitHub team for nested teams
         manager:
-          title: Manager
+          title: Manager Git Handle
           type: string
-          description: Manager to approve requests for
+          description: Manager who would approve the request
   steps:
     - id: fetch-base
       name: Fetch Base Template
@@ -42,13 +41,20 @@ spec:
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
 
-    - id: rename_file
-      name: Rename templated file
-      action: fs:rename
+    - id: debug_workspace
+      name: Debug workspace
+      action: debug:log
       input:
-        files:
-          - from: ./content/template-blueprint.yaml
-            to: ./content/${{ parameters.teamName }}.yaml
+        message: "Content of workspace"
+        listWorkspace: true
+
+    # - id: rename_file
+    #   name: Rename templated file
+    #   action: fs:rename
+    #   input:
+    #     files:
+    #       - from: ./content/template-blueprint.yaml
+    #         to: ./content/${{ parameters.teamName }}.yaml
 
     - id: publish-pr
       name: Publish Pull Request
