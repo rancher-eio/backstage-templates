@@ -38,14 +38,18 @@ spec:
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
         script:
-          - ls skeleton
-    # - id: rename_file
-    #   name: Rename templated file
-    #   action: fs:rename
-    #   input:
-    #     files:
-    #       - from: ./skeleton/template_blueprint.yaml
-    #         to: ./skeleton/${{ parameters.teamName }}.yaml
+          - echo "printing template results..."
+          - ls ./skeleton
+          - echo "done with results"
+
+    - id: rename_file
+      name: Rename templated file
+      action: fs:rename
+      input:
+        files:
+          - from: ./skeleton/template_blueprint.yaml
+            to: ./skeleton/${{ parameters.teamName }}.yaml
+
     - id: publish-pr
       name: Publish Pull Request
       action: publish:github:pull-request
