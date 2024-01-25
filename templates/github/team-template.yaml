@@ -41,20 +41,20 @@ spec:
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
 
-    - id: debug_workspace
-      name: Debug workspace
-      action: debug:log
-      input:
-        message: "Content of workspace"
-        listWorkspace: true
-
-    # - id: rename_file
-    #   name: Rename templated file
-    #   action: fs:rename
+    # - id: debug_workspace
+    #   name: Debug workspace
+    #   action: debug:log
     #   input:
-    #     files:
-    #       - from: ./content/template-blueprint.yaml
-    #         to: ./content/${{ parameters.teamName }}.yaml
+    #     message: "Content of workspace"
+    #     listWorkspace: true
+
+    - id: rename_file
+      name: Rename templated file
+      action: fs:rename
+      input:
+        files:
+          - from: ./content/team-blueprint.yaml
+            to: ./content/${{ parameters.teamName }}.yaml
 
     - id: publish-pr
       name: Publish Pull Request
@@ -66,7 +66,7 @@ spec:
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
         reviewers: ${{ parameters.manager }}
-        teamReviewers: "eio"
+        #teamReviewers: "eio"
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content
         targetPath: ./manifests/github-resources/resources/Team/
