@@ -12,6 +12,7 @@ spec:
       required:
         - teamName
         - orgName
+        - manager
       properties:
         orgName:
           title: Github Org
@@ -25,7 +26,10 @@ spec:
           title: Parent Team ID
           type: number
           description: (Optional) ID of the parent GitHub team for nested teams
-
+        manager:
+          title: Manager
+          type: string
+          description: Manager to approve requests for
   steps:
     - id: fetch-base
       name: Fetch Base Template
@@ -38,13 +42,13 @@ spec:
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
 
-    # - id: rename_file
-    #   name: Rename templated file
-    #   action: fs:rename
-    #   input:
-    #     files:
-    #       - from: ./skeleton/template_blueprint.yaml
-    #         to: ./skeleton/${{ parameters.teamName }}.yaml
+    - id: rename_file
+      name: Rename templated file
+      action: fs:rename
+      input:
+        files:
+          - from: ./skeleton/template-blueprint.yaml
+            to: ./skeleton/${{ parameters.teamName }}.yaml
 
     - id: publish-pr
       name: Publish Pull Request
@@ -55,7 +59,14 @@ spec:
         description: "This PR adds a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
+        reviewers: ${{ parameters.manager }}
+        teamReviewers: "eio"
+        commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content
         targetPath: ./manifests/github-resources/resources/Team/
         # files:
         #   '**/*.yaml': 'manifests/github-resources/resources/Team/'
+  output:
+    links:
+      - title: Pull Request URL
+        url: ${{ steps['publish-pr'].output.remoteUrl }}
