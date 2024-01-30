@@ -1,19 +1,35 @@
 
-apiVersion: backstage.io/v1alpha1
-kind: Component
-metadata:
-  name: catalog
-spec:
-  lifecycle: development
-  owner: eio
-  type: service
-
 # apiVersion: backstage.io/v1alpha1
-# kind: Location
+# kind: Component
 # metadata:
-#   name: catalog-info
+#   name: catalog
 # spec:
-#   # type: url
-#   targets:
-#     - ./templates/github/team-template.yaml
-#     #- https://github.com/rancher-eio/backstage-templates/blob/main/templates/github/team-template.yaml
+#   lifecycle: development
+#   owner: eio
+#   type: service
+
+# # apiVersion: backstage.io/v1alpha1
+# # kind: Location
+# # metadata:
+# #   name: catalog-info
+# # spec:
+# #   # type: url
+# #   targets:
+# #     - ./templates/github/team-template.yaml
+# #     #- https://github.com/rancher-eio/backstage-templates/blob/main/templates/github/team-template.yaml
+
+# Example:
+# apiVersion: backstage.io/v1alpha1
+# kind: Component
+# metadata:
+#   name: petstore
+#   namespace: external-systems
+#   description: Petstore
+# spec:
+#   type: service
+#   lifecycle: experimental
+#   owner: group:pet-managers
+#   providesApis:
+#     - petstore
+#     - internal/streetlights
+#     - hello-world

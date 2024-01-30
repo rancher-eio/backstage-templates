@@ -3,6 +3,8 @@ kind: Team
 metadata:
   name: ${{ values.teamName | lower }}
   namespace: github-resources
+  annotations:
+    backstage.io/kubernetes-id: "{{ teamName }}"
 spec:
   deletionPolicy: Orphan
   forProvider:
