@@ -8,16 +8,6 @@
 #   owner: eio
 #   type: service
 
-# # apiVersion: backstage.io/v1alpha1
-# # kind: Location
-# # metadata:
-# #   name: catalog-info
-# # spec:
-# #   # type: url
-# #   targets:
-# #     - ./templates/github/team-template.yaml
-# #     #- https://github.com/rancher-eio/backstage-templates/blob/main/templates/github/team-template.yaml
-
 # Example:
 # apiVersion: backstage.io/v1alpha1
 # kind: Component
