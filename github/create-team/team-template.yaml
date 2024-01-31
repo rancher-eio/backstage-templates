@@ -34,7 +34,7 @@ spec:
       name: Fetch Skeleton + Template
       action: fetch:template
       input:
-        url: https://github.com/rancher-eio/backstage-templates/tree/main/blueprints/github
+        url: https://github.com/rancher-eio/backstage-templates/tree/main/github/create-team
         targetPath: content
         values:
           teamName: ${{ parameters.teamName }}
@@ -73,41 +73,41 @@ spec:
         # files:
         #   '**/*.yaml': 'manifests/github-resources/resources/Team/'
 
-    - id: write-catalog-info
-      name: Write Catalog Info
-      action: fs:write
-      input:
-        path: ./content/${{ parameters.teamName }}/catalog-info.yaml
-        content: |
-          apiVersion: backstage.io/v1alpha1
-          kind: Component
-          metadata:
-            name: ${{ parameters.teamName }}
-            description: "GitHub team ${{ parameters.teamName }}"
-            labels:
-              backstage.io/kubernetes-id: app
-            tags:
-              - github
-          spec:
-            type: service
-            lifecycle: experimental
-            owner: eio
+    # - id: write-catalog-info
+    #   name: Write Catalog Info
+    #   action: fs:write
+    #   input:
+    #     path: ./content/${{ parameters.teamName }}/catalog-info.yaml
+    #     content: |
+    #       apiVersion: backstage.io/v1alpha1
+    #       kind: Component
+    #       metadata:
+    #         name: ${{ parameters.teamName }}
+    #         description: "GitHub team ${{ parameters.teamName }}"
+    #         labels:
+    #           backstage.io/kubernetes-id: app
+    #         tags:
+    #           - github
+    #       spec:
+    #         type: service
+    #         lifecycle: experimental
+    #         owner: eio
 
-    - id: publish
-      if: ${{ parameters.dryRun !== true }}
-      name: Publish
-      action: publish:github
-      input:
-        allowedHosts:
-          - github.com
-        description: This is ${{ parameters.name }}
-        repoUrl: github.com?repo=backstage-templates&owner=rancher-eio
+    # - id: publish
+    #   if: ${{ parameters.dryRun !== true }}
+    #   name: Publish
+    #   action: publish:github
+    #   input:
+    #     allowedHosts:
+    #       - github.com
+    #     description: This is ${{ parameters.name }}
+    #     repoUrl: github.com?repo=backstage-templates&owner=rancher-eio
 
     - id: register
       name: Register
       action: catalog:register
       input:
-        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/catalog-info.yaml
+        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/catalog-info.yaml
         # repoContentsUrl: ${{ steps['publish-pr'].output.repoContentsUrl }}
         # catalogInfoPath: '/catalog-info.yaml'
 
