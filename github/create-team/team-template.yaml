@@ -68,10 +68,39 @@ spec:
         reviewers: ${{ parameters.manager }}
         #teamReviewers: "eio"
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
-        sourcePath: ./content
-        targetPath: ./manifests/github-resources/resources/Team/
-        # files:
-        #   '**/*.yaml': 'manifests/github-resources/resources/Team/'
+        #sourcePath: ./content
+        # targetPath: ./manifests/github-resources/resources/Team/
+        files:
+          './content/${{ parameters.teamName }}.yaml': 'manifests/github-resources/resources/Team/'
+          #'**/*.yaml': 'manifests/github-resources/resources/Team/'
+
+    - id: write-catalog-info
+      name: Write Catalog Info
+      action: fs:write
+      input:
+        path: ./content/catalog-info.yaml
+        content: |
+          apiVersion: backstage.io/v1alpha1
+          kind: Component
+          metadata:
+            name: ${{ parameters.teamName }}
+            description: "GitHub team ${{ parameters.teamName }}"
+            annotations:
+              backstage.io/kubernetes-id: app
+          spec:
+            type: service
+            owner: eio
+            lifecycle: experimental
+
+    - id: publish-catalog-info
+      name: Publish Catalog Info
+      action: publish:github
+      input:
+        repoUrl: github.com?repo=backstage-templates&owner=rancher-eio
+        branchName: "main"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files:
+          './content/catalog-info.yaml': '/github/create-team/catalog-info.yaml'
 
     # - id: write-catalog-info
     #   name: Write Catalog Info
@@ -92,16 +121,6 @@ spec:
     #         type: service
     #         lifecycle: experimental
     #         owner: eio
-
-    # - id: publish
-    #   if: ${{ parameters.dryRun !== true }}
-    #   name: Publish
-    #   action: publish:github
-    #   input:
-    #     allowedHosts:
-    #       - github.com
-    #     description: This is ${{ parameters.name }}
-    #     repoUrl: github.com?repo=backstage-templates&owner=rancher-eio
 
     - id: register
       name: Register
