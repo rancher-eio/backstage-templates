@@ -29,8 +29,8 @@ jobs:
 
     - name: Commit and Push Changes
       run: |
-        git config --global user.name 'Your Name'
-        git config --global user.email 'your-email@example.com'
+        git config --global user.name 'rancherbot'
+        git config --global user.email 'rancherbot@rancher.com'
         git add .
         git commit -m "Add new team: ${{ github.event.inputs.teamName }}"
         git push
