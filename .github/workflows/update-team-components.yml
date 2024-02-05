@@ -1,0 +1,36 @@
+name: Update Team Components
+
+on:
+  workflow_dispatch:
+    inputs:
+      teamName:
+        description: 'Name of the new team'
+        required: true
+
+jobs:
+  update-components:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Create new team component file from template
+      run: |
+        sed "s/TEAM_NAME/${{ github.event.inputs.teamName }}/g" ./github/create-team/component.yaml > ./github/create-team/components/${{ github.event.inputs.teamName }}-component.yaml
+
+    - name: Install yq (YAML Processor)
+      run: |
+        sudo snap install yq
+
+    - name: Update team-components.yaml
+      run: |
+        yq e ".spec.targets += [\"./components/${{ github.event.inputs.teamName }}-component.yaml\"]" -i ./github/create-team/team-components.yaml
+
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name 'Your Name'
+        git config --global user.email 'your-email@example.com'
+        git add .
+        git commit -m "Add new team: ${{ github.event.inputs.teamName }}"
+        git push
