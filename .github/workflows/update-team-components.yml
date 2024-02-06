@@ -30,10 +30,15 @@ jobs:
       run: |
         yq e ".spec.targets += [\"./components/${{ github.event.inputs.teamName }}-component.yaml\"]" -i ./github/create-team/team-components.yaml
 
+    - name: Set Git Remote URL with Token
+      run: git remote set-url origin https://x-access-token:${{ secrets.RANCHER_EIO_GITHUB_TOKEN }}@github.com/rancher-eio/backstage-templates.git
+
     - name: Commit and Push Changes
       run: |
         git config --global user.name 'rancherbot'
         git config --global user.email 'rancherbot@rancher.com'
         git add .
         git commit -m "Add new team: ${{ github.event.inputs.teamName }}"
-        git push
+        git push --set-upstream origin HEAD:main
+      env:
+        GITHUB_TOKEN: ${{ secrets.RANCHER_EIO_GITHUB_TOKEN }}
