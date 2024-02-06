@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: testing-testy-test-team
+  #description: ${{values.description | dump}}
+  annotations:
+    backstage.io/kubernetes-id: testing-testy-test-team
+spec:
+  type: team
+  lifecycle: experimental
+  owner: eio
