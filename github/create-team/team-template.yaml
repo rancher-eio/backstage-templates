@@ -53,8 +53,8 @@ spec:
       action: fs:rename
       input:
         files:
-          - from: ./content/team-blueprint.yaml
-            to: ./content/${{ parameters.teamName }}.yaml
+          - from: ./content/skeletons/team-skeleton.yaml
+            to: ./content/skeletons/${{ parameters.teamName }}.yaml
 
     - id: publish-pr
       name: Publish Pull Request
@@ -66,14 +66,14 @@ spec:
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
-        #sourcePath: ./content
-        # targetPath: ./manifests/github-resources/resources/Team/
+        sourcePath: ./content/skeletons
+        targetPath: ./manifests/github-resources/resources/Team/
         # reviewers:
         #   - "${{ parameters.manager }}"
         teamReviewers:
           - "eio"
-        files:
-          './content/${{ parameters.teamName }}.yaml': 'manifests/github-resources/resources/Team/'
+        # files:
+        #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
         #'**/*.yaml': 'manifests/github-resources/resources/Team/'
 
     - id: dispatch-workflow
@@ -91,7 +91,7 @@ spec:
       name: Register
       action: catalog:register
       input:
-        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-catalog-info.yaml
+        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-component.yaml
         optional: true
         # repoContentsUrl: ${{ steps['publish-pr'].output.repoContentsUrl }}
         # catalogInfoPath: '/catalog-info.yaml'
