@@ -15,6 +15,9 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
+    - name: Create components directory
+      run: mkdir -p ./github/create-team/components
+
     - name: Create new team component file from template
       run: |
         sed "s/TEAM_NAME/${{ github.event.inputs.teamName }}/g" ./github/create-team/component.yaml > ./github/create-team/components/${{ github.event.inputs.teamName }}-component.yaml
