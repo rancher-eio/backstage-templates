@@ -66,14 +66,14 @@ spec:
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
-        sourcePath: ./content
+        #sourcePath: ./content
         # targetPath: ./manifests/github-resources/resources/Team/
         # reviewers:
         #   - "${{ parameters.manager }}"
         teamReviewers:
           - "eio"
         files:
-          '${{ parameters.teamName }}.yaml': 'manifests/github-resources/resources/Team/'
+          './content/${{ parameters.teamName }}.yaml': 'manifests/github-resources/resources/Team/'
         #'**/*.yaml': 'manifests/github-resources/resources/Team/'
 
     - id: dispatch-workflow
