@@ -20,7 +20,7 @@ jobs:
 
     - name: Create new team component file from template
       run: |
-        sed "s/TEAM_NAME/${{ github.event.inputs.teamName }}/g" ./github/create-team/component.yaml > ./github/create-team/components/${{ github.event.inputs.teamName }}-component.yaml
+        sed "s/TEAM_NAME/${{ github.event.inputs.teamName }}/g" ./github/create-team/component-template.yaml > ./github/create-team/components/${{ github.event.inputs.teamName }}-component.yaml
 
     - name: Install yq (YAML Processor)
       run: |
