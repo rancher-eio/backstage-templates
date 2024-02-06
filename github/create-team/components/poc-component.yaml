@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: poc
+  #description: ${{values.description | dump}}
+  annotations:
+    backstage.io/kubernetes-id: app
+spec:
+  type: team
+  lifecycle: experimental
+  owner: eio
