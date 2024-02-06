@@ -65,15 +65,16 @@ spec:
         description: "This PR creates a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
-        reviewers: ${{ parameters.manager }}
-        #teamReviewers: "eio"
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
-        #sourcePath: ./content
+        sourcePath: ./content
         # targetPath: ./manifests/github-resources/resources/Team/
+        reviewers:
+          - "${{ parameters.manager }}"
+        teamReviewers:
+          - "eio"
         files:
           './content/${{ parameters.teamName }}.yaml': 'manifests/github-resources/resources/Team/'
-          #'**/*.yaml': 'manifests/github-resources/resources/Team/'
-
+        #'**/*.yaml': 'manifests/github-resources/resources/Team/'
 
     - id: dispatch-workflow
       name: Trigger Workflow

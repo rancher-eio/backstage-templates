@@ -4,7 +4,7 @@ metadata:
   name: TEAM_NAME
   #description: ${{values.description | dump}}
   annotations:
-    backstage.io/kubernetes-id: app
+    backstage.io/kubernetes-id: TEAM_NAME
 spec:
   type: team
   lifecycle: experimental
