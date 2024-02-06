@@ -5,3 +5,4 @@ metadata:
   description: A collection of all team components
 spec:
   targets:
+    - ./components/poc-team-component.yaml
