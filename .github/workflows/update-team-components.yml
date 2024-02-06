@@ -6,6 +6,8 @@ on:
       teamName:
         description: 'Name of the new team'
         required: true
+permissions:
+  contents: write
 
 jobs:
   update-components:
@@ -14,6 +16,8 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
+      with:
+        token: ${{secrets.RANCHER_EIO_GITHUB_TOKEN}}
 
     - name: Create components directory
       run: mkdir -p ./github/create-team/components
@@ -30,8 +34,8 @@ jobs:
       run: |
         yq e ".spec.targets += [\"./components/${{ github.event.inputs.teamName }}-component.yaml\"]" -i ./github/create-team/team-components.yaml
 
-    - name: Set Git Remote URL with Token
-      run: git remote set-url origin https://x-access-token:${{ secrets.RANCHER_EIO_GITHUB_TOKEN }}@github.com/rancher-eio/backstage-templates.git
+    # - name: Set Git Remote URL with Token
+    #   run: git remote set-url origin https://x-access-token:${{ secrets.RANCHER_EIO_GITHUB_TOKEN }}@github.com/rancher-eio/backstage-templates.git
 
     - name: Commit and Push Changes
       run: |
@@ -39,6 +43,8 @@ jobs:
         git config --global user.email 'rancherbot@rancher.com'
         git add .
         git commit -m "Add new team: ${{ github.event.inputs.teamName }}"
-        git push --set-upstream origin HEAD:main
+        git push
+      #git remote set-url --push origin https://rancherbot:$GITHUB_TOKEN@github.com/rancher-eio/backstage-templates
+      #git push --set-upstream origin HEAD:main
       env:
         GITHUB_TOKEN: ${{ secrets.RANCHER_EIO_GITHUB_TOKEN }}
