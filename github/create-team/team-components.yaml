@@ -7,3 +7,4 @@ spec:
   targets:
     - ./components/poc-team-component.yaml
     - ./components/poc-team-2-component.yaml
+    - ./components/poc-team-3-component.yaml
