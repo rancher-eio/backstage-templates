@@ -5,6 +5,8 @@ metadata:
   namespace: github-resources
   annotations:
     backstage.io/kubernetes-id: ${{ values.teamName }}
+  labels:
+    backstage.io/kubernetes-id: ${{ values.teamName }}
 spec:
   deletionPolicy: Orphan
   forProvider:
