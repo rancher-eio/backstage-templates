@@ -6,6 +6,6 @@ metadata:
   annotations:
     backstage.io/kubernetes-id: poc-team-3
 spec:
-  type: team
+  type: service
   lifecycle: experimental
   owner: eio
