@@ -12,3 +12,4 @@ spec:
     - ./components/poc-team-3-component.yaml
     - ./components/poc-team-4-component.yaml
     - ./components/poc-team-5-component.yaml
+    - ./components/test-team-34-component.yaml
