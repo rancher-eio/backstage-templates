@@ -14,5 +14,6 @@ spec:
     {% if values.parentTeamId %}
     parentTeamId: ${{ values.parentTeamId }}
     {% endif %}
+    privacy: closed
   providerConfigRef:
     name: ${{ values.orgName | lower }}
