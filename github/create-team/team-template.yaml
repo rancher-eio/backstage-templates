@@ -71,7 +71,7 @@ spec:
         # reviewers:
         #   - "${{ parameters.manager }}"
         teamReviewers:
-          - rancher-eio/eio
+          - rancher-eio/eio-guests
         # files:
         #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
         #'**/*.yaml': 'manifests/github-resources/resources/Team/'
