@@ -16,3 +16,4 @@ spec:
     - ./components/TeamRocket-component.yaml
     - ./components/poc-team-6-component.yaml
     - ./components/poc-team-7-component.yaml
+    - ./components/poc-team-8-component.yaml
