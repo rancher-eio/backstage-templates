@@ -57,7 +57,7 @@ spec:
             to: ./content/skeletons/${{ parameters.teamName }}.yaml
 
     - id: publish-pr
-      name: Publish Pull Request
+      name: Publish Team PR
       action: publish:github:pull-request
       input:
         repoUrl: github.com?repo=kitchen&owner=rancher-eio
