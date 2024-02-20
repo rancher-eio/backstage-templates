@@ -104,7 +104,7 @@ spec:
           -  rancherbot
           - ${{ parameters.manager }}
         teamReviewers:
-          - rancher-eio/eio-guests
+          - rancher-eio/eio
         # files:
         #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
         #'**/*.yaml': 'manifests/github-resources/resources/Team/'
