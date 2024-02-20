@@ -101,7 +101,7 @@ spec:
         sourcePath: ./content/skeletons
         targetPath: ./manifests/github-resources/resources/Team/
         reviewers:
-          - ${{ parameters.manager | parseEntityRef | pick('name') }}
+          - ${{ parameters.manager }} # | parseEntityRef | pick('name') }}
         teamReviewers:
           - rancher-eio/eio
         #   - "${{ parameters.manager }}"
