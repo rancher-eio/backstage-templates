@@ -12,6 +12,7 @@ spec:
       required:
         - teamName
         - orgName
+        - manager
       properties:
         orgName:
           title: Github Org
@@ -51,7 +52,7 @@ spec:
         manager:
           title: Manager Github Name
           type: string
-          description: (Optional) Manager who would approve the request
+          description: Manager who would approve the request
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -62,6 +63,13 @@ spec:
           #     kind: Group
           #     'spec.type': team
   steps:
+    # - id: debug_workspace
+    #   name: Debug workspace
+    #   action: debug:log
+    #   input:
+    #     message: "Content of workspace manager: ${{ parameters.manager }}"
+    #     listWorkspace: true
+
     - id: fetch-base
       name: Fetch Template + Skeleton
       action: fetch:template
@@ -71,14 +79,8 @@ spec:
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
+          manager: ${{ parameters.manager }}
           parentTeamId: ${{ parameters.parentTeamId }}
-
-    # - id: debug_workspace
-    #   name: Debug workspace
-    #   action: debug:log
-    #   input:
-    #     message: "Content of workspace"
-    #     listWorkspace: true
 
     - id: rename_file
       name: Rename Skeleton File
@@ -100,9 +102,8 @@ spec:
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content/skeletons
         targetPath: ./manifests/github-resources/resources/Team/
-        reviewers:
-          -  rancherbot
-          - ${{ parameters.manager }}
+        # reviewers:
+        #   - ${{ parameters.manager | parseEntityRef | pick('name') }}
         teamReviewers:
           - rancher-eio/eio
         # files:
