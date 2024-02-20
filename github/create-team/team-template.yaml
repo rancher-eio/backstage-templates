@@ -5,7 +5,7 @@ metadata:
   title: GitHub Team Creation Template
   description: Template for creating a GitHub team
 spec:
-  owner: "eio"
+  owner: rancher-eio/eio
   type: service
   parameters:
     - title: GitHub Team Details
@@ -17,6 +17,29 @@ spec:
           title: Github Org
           type: string
           description: Name of the GitHub organization
+          default: rancherlabs
+          enum:
+            - rancher
+            - rancherlabs
+            - rancher-eio
+            - longhorn
+            - harvester
+            - k3s-io
+            - rancher-sandbox
+            - rancher-plugins
+            - flannel-io
+            - SUSE
+          enumNames:
+            - 'rancher'
+            - 'rancherlabs'
+            - 'rancher-eio'
+            - 'longhorn'
+            - 'harvester'
+            - 'k3s-io'
+            - 'rancher-sandbox'
+            - 'rancher-plugins'
+            - 'flannel-io'
+            - 'SUSE'
         teamName:
           title: Team Name
           type: string
@@ -26,12 +49,21 @@ spec:
           type: number
           description: (Optional) ID of the parent GitHub team for nested teams
         manager:
-          title: Manager Git Handle
+          title: Manager Github Name
           type: string
-          description: Manager who would approve the request
+          description: (Optional) Manager who would approve the request
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: User
+          # ui:field: EntityPicker
+          # ui:options:
+          #   catalogFilter:
+          #     kind: Group
+          #     'spec.type': team
   steps:
     - id: fetch-base
-      name: Fetch Skeleton + Template
+      name: Fetch Template + Skeleton
       action: fetch:template
       input:
         url: https://github.com/rancher-eio/backstage-templates/tree/main/github/create-team
@@ -49,7 +81,7 @@ spec:
     #     listWorkspace: true
 
     - id: rename_file
-      name: Rename templated file
+      name: Rename Skeleton File
       action: fs:rename
       input:
         files:
@@ -68,8 +100,9 @@ spec:
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content/skeletons
         targetPath: ./manifests/github-resources/resources/Team/
-        # reviewers:
-        #   - "${{ parameters.manager }}"
+        reviewers:
+          -  rancherbot
+          - ${{ parameters.manager }}
         teamReviewers:
           - rancher-eio/eio-guests
         # files:
