@@ -12,7 +12,7 @@ spec:
       required:
         - teamName
         - orgName
-        - manager
+        # - manager
       properties:
         orgName:
           title: Github Org
@@ -72,7 +72,7 @@ spec:
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
-          manager: ${{ parameters.manager }}
+          # manager: ${{ parameters.manager }}
           parentTeamId: ${{ parameters.parentTeamId }}
 
     # - id: debug_workspace
