@@ -12,6 +12,7 @@ spec:
       required:
         - teamName
         - orgName
+        - manager
       properties:
         orgName:
           title: Github Org
@@ -51,7 +52,7 @@ spec:
         manager:
           title: Manager Github Name
           type: string
-          description: (Optional) Manager who would approve the request
+          description: Manager who would approve the request
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -71,6 +72,7 @@ spec:
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
+          manager: ${{ parameters.manager }}
           parentTeamId: ${{ parameters.parentTeamId }}
 
     # - id: debug_workspace
@@ -101,7 +103,7 @@ spec:
         sourcePath: ./content/skeletons
         targetPath: ./manifests/github-resources/resources/Team/
         # reviewers:
-        #   - "${{ parameters.manager }}"
+        #   - ${{ parameters.manager | parseEntityRef | pick('name') }}
         teamReviewers:
           - rancher-eio/eio
         # files:
