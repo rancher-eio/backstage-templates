@@ -12,7 +12,6 @@ spec:
       required:
         - teamName
         - orgName
-        # - manager
       properties:
         orgName:
           title: Github Org
@@ -52,7 +51,7 @@ spec:
         manager:
           title: Manager Github Name
           type: string
-          description: Manager who would approve the request
+          description: (Optional) Manager who would approve the request
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -72,7 +71,6 @@ spec:
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
-          # manager: ${{ parameters.manager }}
           parentTeamId: ${{ parameters.parentTeamId }}
 
     # - id: debug_workspace
@@ -103,7 +101,7 @@ spec:
         sourcePath: ./content/skeletons
         targetPath: ./manifests/github-resources/resources/Team/
         # reviewers:
-        #   - ${{ parameters.manager | parseEntityRef | pick('name') }}
+        #   - "${{ parameters.manager }}"
         teamReviewers:
           - rancher-eio/eio
         # files:
@@ -127,8 +125,6 @@ spec:
       input:
         catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-component.yaml
         optional: true
-        # repoContentsUrl: ${{ steps['publish-pr'].output.repoContentsUrl }}
-        # catalogInfoPath: '/catalog-info.yaml'
 
   output:
     links:
