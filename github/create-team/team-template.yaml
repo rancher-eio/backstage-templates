@@ -100,10 +100,11 @@ spec:
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content/skeletons
         targetPath: ./manifests/github-resources/resources/Team/
-        # reviewers:
-        #   - "${{ parameters.manager }}"
+        reviewers:
+          - ${{ parameters.manager | parseEntityRef | pick('name') }}
         teamReviewers:
           - rancher-eio/eio
+        #   - "${{ parameters.manager }}"
         # files:
         #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
         #'**/*.yaml': 'manifests/github-resources/resources/Team/'
