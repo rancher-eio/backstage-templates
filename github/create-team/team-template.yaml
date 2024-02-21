@@ -13,9 +13,6 @@ spec:
         - teamName
         - orgName
       properties:
-        input:
-          title: "Add a string separated by :"
-          type: string
         orgName:
           title: Github Org
           type: string
@@ -54,9 +51,10 @@ spec:
         manager:
           title: Manager Github Name
           type: string
-          description: (Optional) Manager who would approve the request
+          description: Manager who would approve the request
           ui:field: EntityPicker
           ui:options:
+            allowArbitraryValues: false
             catalogFilter:
               kind: User
           # ui:field: EntityPicker
@@ -65,26 +63,11 @@ spec:
           #     kind: Group
           #     'spec.type': team
   steps:
-    - id: assign-variables
-      name: Assign variables from parameters
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          item: ${{ parameters.input }}
-        expression: "(
-                        $name := $substringBefore($.item, ':');
-                        $id := $substringAfter($.item, ':');
-                        {
-                          'name': $name,
-                          'id': $id
-                        }
-                      )"
-
-    - id: log-result
-      name: Display retrieved params
+    - id: log
+      name: Pick
       action: debug:log
       input:
-        message: "name ${{ steps['assign-variables'].output.result.name }} id ${{ steps['assign-variables'].output.result.id }}"
+        extra: ${{ parameters.manager | parseEntityRef | pick('name') }}
 
     - id: fetch-base
       name: Fetch Template + Skeleton
@@ -155,6 +138,6 @@ spec:
     links:
       - title: Pull Request URL
         url: ${{ steps['publish-pr'].output.remoteUrl }}
-      - title: Open in catalog
-        icon: catalog
-        entityRef: ${{ steps['register'].output.entityRef }}
+      # - title: Open in catalog
+      #   icon: catalog
+      #   entityRef: ${{ steps['register'].output.entityRef }}
