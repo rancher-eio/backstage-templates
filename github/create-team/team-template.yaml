@@ -12,6 +12,7 @@ spec:
       required:
         - teamName
         - orgName
+        - manager
       properties:
         orgName:
           title: Github Org
@@ -63,11 +64,11 @@ spec:
           #     kind: Group
           #     'spec.type': team
   steps:
-    - id: log
-      name: Pick
-      action: debug:log
-      input:
-        extra: ${{ parameters.manager | parseEntityRef | pick('name') }}
+    # - id: log
+    #   name: Pick
+    #   action: debug:log
+    #   input:
+    #     extra: ${{ parameters.manager | parseEntityRef | pick('name') }}
 
     - id: fetch-base
       name: Fetch Template + Skeleton
@@ -79,6 +80,7 @@ spec:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
+          manager: ${{ parameters.manager }}
 
     # - id: debug_workspace
     #   name: Debug workspace
