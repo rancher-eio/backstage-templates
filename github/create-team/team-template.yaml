@@ -101,14 +101,14 @@ spec:
       name: Publish Team PR
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=kitchen&owner=rancher-eio
+        repoUrl: github.com?repo=github&owner=rancher-eio
         title: "Creating team - ${{ parameters.teamName }}"
         description: "This PR creates a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content/skeletons
-        targetPath: ./manifests/github-resources/resources/Team/
+        targetPath: "./manifests/${{ parameters.orgName }}-github-org/resources/Team/"
         # reviewers:
         #   - ${{ parameters.manager | pick('name') }} # | parseEntityRef | pick('name') }}
         teamReviewers:
