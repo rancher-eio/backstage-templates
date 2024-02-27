@@ -5,21 +5,3 @@ metadata:
   description: A collection of all team components
 spec:
   targets:
-    - ./components/poc-team-component.yaml
-    - ./components/poc-team-2-component.yaml
-    - ./components/poc-team-3-component.yaml
-    - ./components/testing-testy-test-team-component.yaml
-    - ./components/poc-team-3-component.yaml
-    - ./components/poc-team-4-component.yaml
-    - ./components/poc-team-5-component.yaml
-    - ./components/test-team-34-component.yaml
-    - ./components/TeamRocket-component.yaml
-    - ./components/poc-team-6-component.yaml
-    - ./components/poc-team-7-component.yaml
-    - ./components/poc-team-8-component.yaml
-    - ./components/poc-team-11-component.yaml
-    - ./components/poc-team-12-component.yaml
-    - ./components/poc-team-13-component.yaml
-    - ./components/poc-team-14-component.yaml
-    - ./components/poc-team-15-component.yaml
-    - ./components/poc-team-16-component.yaml
