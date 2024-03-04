@@ -12,7 +12,7 @@ spec:
       required:
         - teamName
         - orgName
-        - manager
+        # - manager
       properties:
         orgName:
           title: Github Org
@@ -49,15 +49,15 @@ spec:
           title: Parent Team ID
           type: number
           description: (Optional) ID of the parent GitHub team for nested teams
-        manager:
-          title: Manager Github Name
-          type: string
-          description: Manager who would approve the request
-          ui:field: EntityPicker
-          ui:options:
-            allowArbitraryValues: false
-            catalogFilter:
-              kind: User
+        # manager:
+        #   title: Manager Github Name
+        #   type: string
+        #   description: Manager who would approve the request
+        #   ui:field: EntityPicker
+        #   ui:options:
+        #     allowArbitraryValues: false
+        #     catalogFilter:
+        #       kind: User
           # ui:field: EntityPicker
           # ui:options:
           #   catalogFilter:
@@ -80,7 +80,7 @@ spec:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
-          manager: ${{ parameters.manager }}
+          # manager: ${{ parameters.manager }}
 
     # - id: debug_workspace
     #   name: Debug workspace
