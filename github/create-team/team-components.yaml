@@ -4,4 +4,4 @@ metadata:
   name: team-components
   description: A collection of all team components
 spec:
-  targets:
+  targets: []
