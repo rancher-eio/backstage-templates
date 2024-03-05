@@ -31,7 +31,7 @@ spec:
         #   description: Manager who would approve the request
   steps:
     - id: fetch-base
-      name: Fetch Skeleton + Template
+      name: Fetch Templates
       action: fetch:template
       input:
         url: https://github.com/rancher-eio/backstage-templates/tree/main/github/test-creation
