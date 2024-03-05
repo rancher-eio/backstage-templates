@@ -1,0 +1,19 @@
+apiVersion: team.github.upbound.io/v1alpha1
+kind: Team
+metadata:
+  name: ${{ values.teamName | lower }}
+  namespace: github-resources
+  annotations:
+    backstage.io/kubernetes-id: ${{ values.teamName }}
+  labels:
+    backstage.io/kubernetes-id: ${{ values.teamName }}
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    name: ${{ values.teamName }}
+    {% if values.parentTeamId %}
+    parentTeamId: ${{ values.parentTeamId }}
+    {% endif %}
+    privacy: closed
+  providerConfigRef:
+    name: ${{ values.orgName | lower }}
