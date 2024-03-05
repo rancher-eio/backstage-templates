@@ -12,7 +12,6 @@ spec:
       required:
         - teamName
         - orgName
-        # - manager
       properties:
         orgName:
           title: Github Org
@@ -49,27 +48,20 @@ spec:
           title: Parent Team ID
           type: number
           description: (Optional) ID of the parent GitHub team for nested teams
-        # manager:
-        #   title: Manager Github Name
-        #   type: string
-        #   description: Manager who would approve the request
-        #   ui:field: EntityPicker
-        #   ui:options:
-        #     allowArbitraryValues: false
-        #     catalogFilter:
-        #       kind: User
+        manager:
+          title: Manager Github Name
+          type: string
+          description: (Optional) Manager who would approve the request
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: User
           # ui:field: EntityPicker
           # ui:options:
           #   catalogFilter:
           #     kind: Group
           #     'spec.type': team
   steps:
-    # - id: log
-    #   name: Pick
-    #   action: debug:log
-    #   input:
-    #     extra: ${{ parameters.manager | parseEntityRef | pick('name') }}
-
     - id: fetch-base
       name: Fetch Template + Skeleton
       action: fetch:template
@@ -80,7 +72,6 @@ spec:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
           parentTeamId: ${{ parameters.parentTeamId }}
-          # manager: ${{ parameters.manager }}
 
     # - id: debug_workspace
     #   name: Debug workspace
@@ -101,19 +92,18 @@ spec:
       name: Publish Team PR
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=github&owner=rancher-eio
+        repoUrl: github.com?repo=kitchen&owner=rancher-eio
         title: "Creating team - ${{ parameters.teamName }}"
         description: "This PR creates a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
         token: ${{ secrets.GITHUB_TOKEN }}
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content/skeletons
-        targetPath: "./manifests/${{ parameters.orgName }}-github-org/resources/Team/"
+        targetPath: ./manifests/github-resources/resources/Team/
         # reviewers:
-        #   - ${{ parameters.manager | pick('name') }} # | parseEntityRef | pick('name') }}
+        #   - "${{ parameters.manager }}"
         teamReviewers:
           - rancher-eio/eio
-        #   - "${{ parameters.manager }}"
         # files:
         #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
         #'**/*.yaml': 'manifests/github-resources/resources/Team/'
@@ -140,6 +130,152 @@ spec:
     links:
       - title: Pull Request URL
         url: ${{ steps['publish-pr'].output.remoteUrl }}
-      # - title: Open in catalog
-      #   icon: catalog
-      #   entityRef: ${{ steps['register'].output.entityRef }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
+
+# apiVersion: scaffolder.backstage.io/v1beta3
+# kind: Template
+# metadata:
+#   name: team-template
+#   title: GitHub Team Creation Template
+#   description: Template for creating a GitHub team
+# spec:
+#   owner: rancher-eio/eio
+#   type: service
+#   parameters:
+#     - title: GitHub Team Details
+#       required:
+#         - teamName
+#         - orgName
+#         # - manager
+#       properties:
+#         orgName:
+#           title: Github Org
+#           type: string
+#           description: Name of the GitHub organization
+#           default: rancherlabs
+#           enum:
+#             - rancher
+#             - rancherlabs
+#             - rancher-eio
+#             - longhorn
+#             - harvester
+#             - k3s-io
+#             - rancher-sandbox
+#             - rancher-plugins
+#             - flannel-io
+#             - SUSE
+#           enumNames:
+#             - 'rancher'
+#             - 'rancherlabs'
+#             - 'rancher-eio'
+#             - 'longhorn'
+#             - 'harvester'
+#             - 'k3s-io'
+#             - 'rancher-sandbox'
+#             - 'rancher-plugins'
+#             - 'flannel-io'
+#             - 'SUSE'
+#         teamName:
+#           title: Team Name
+#           type: string
+#           description: Name of the GitHub team
+#         parentTeamId:
+#           title: Parent Team ID
+#           type: number
+#           description: (Optional) ID of the parent GitHub team for nested teams
+#         # manager:
+#         #   title: Manager Github Name
+#         #   type: string
+#         #   description: Manager who would approve the request
+#         #   ui:field: EntityPicker
+#         #   ui:options:
+#         #     allowArbitraryValues: false
+#         #     catalogFilter:
+#         #       kind: User
+#           # ui:field: EntityPicker
+#           # ui:options:
+#           #   catalogFilter:
+#           #     kind: Group
+#           #     'spec.type': team
+#   steps:
+#     # - id: log
+#     #   name: Pick
+#     #   action: debug:log
+#     #   input:
+#     #     extra: ${{ parameters.manager | parseEntityRef | pick('name') }}
+
+#     - id: fetch-base
+#       name: Fetch Template + Skeleton
+#       action: fetch:template
+#       input:
+#         url: https://github.com/rancher-eio/backstage-templates/tree/main/github/create-team
+#         targetPath: content
+#         values:
+#           teamName: ${{ parameters.teamName }}
+#           orgName: ${{ parameters.orgName }}
+#           parentTeamId: ${{ parameters.parentTeamId }}
+#           # manager: ${{ parameters.manager }}
+
+#     # - id: debug_workspace
+#     #   name: Debug workspace
+#     #   action: debug:log
+#     #   input:
+#     #     message: "Content of workspace"
+#     #     listWorkspace: true
+
+#     - id: rename_file
+#       name: Rename Skeleton File
+#       action: fs:rename
+#       input:
+#         files:
+#           - from: ./content/skeletons/team-skeleton.yaml
+#             to: ./content/skeletons/${{ parameters.teamName }}.yaml
+
+#     - id: publish-pr
+#       name: Publish Team PR
+#       action: publish:github:pull-request
+#       input:
+#         repoUrl: github.com?repo=github&owner=rancher-eio
+#         title: "Creating team - ${{ parameters.teamName }}"
+#         description: "This PR creates a new team"
+#         branchName: "add-new-team-${{ parameters.teamName }}"
+#         token: ${{ secrets.GITHUB_TOKEN }}
+#         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
+#         sourcePath: ./content/skeletons
+#         targetPath: "./manifests/${{ parameters.orgName }}-github-org/resources/Team/"
+#         # reviewers:
+#         #   - ${{ parameters.manager | pick('name') }} # | parseEntityRef | pick('name') }}
+#         teamReviewers:
+#           - rancher-eio/eio
+#         #   - "${{ parameters.manager }}"
+#         # files:
+#         #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
+#         #'**/*.yaml': 'manifests/github-resources/resources/Team/'
+
+#     - id: dispatch-workflow
+#       name: Trigger Workflow
+#       action: github:actions:dispatch
+#       input:
+#         repoUrl: "github.com?repo=backstage-templates&owner=rancher-eio"
+#         workflowId: "update-team-components.yml"
+#         branchOrTagName: "main"
+#         workflowInputs:
+#           teamName: ${{ parameters.teamName }}
+#         token: '${{ secrets.GITHUB_TOKEN }}'
+
+#     - id: register
+#       name: Register
+#       action: catalog:register
+#       input:
+#         catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-component.yaml
+#         optional: true
+
+#   output:
+#     links:
+#       - title: Pull Request URL
+#         url: ${{ steps['publish-pr'].output.remoteUrl }}
+#       # - title: Open in catalog
+#       #   icon: catalog
+#       #   entityRef: ${{ steps['register'].output.entityRef }}
