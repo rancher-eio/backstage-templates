@@ -21,14 +21,14 @@ spec:
           title: Team Name
           type: string
           description: Name of the GitHub team
-        parentTeamId:
-          title: Parent Team ID
-          type: number
-          description: (Optional) ID of the parent GitHub team for nested teams
-        manager:
-          title: Manager Git Handle
-          type: string
-          description: Manager who would approve the request
+        # parentTeamId:
+        #   title: Parent Team ID
+        #   type: number
+        #   description: (Optional) ID of the parent GitHub team for nested teams
+        # manager:
+        #   title: Manager Git Handle
+        #   type: string
+        #   description: Manager who would approve the request
   steps:
     - id: fetch-base
       name: Fetch Skeleton + Template
@@ -39,7 +39,7 @@ spec:
         values:
           teamName: ${{ parameters.teamName }}
           orgName: ${{ parameters.orgName }}
-          parentTeamId: ${{ parameters.parentTeamId }}
+          # parentTeamId: ${{ parameters.parentTeamId }}
 
     # - id: debug_workspace
     #   name: Debug workspace
@@ -48,58 +48,58 @@ spec:
     #     message: "Content of workspace"
     #     listWorkspace: true
 
-    - id: rename_file
-      name: Rename templated file
-      action: fs:rename
-      input:
-        files:
-          - from: ./content/skeletons/team-skeleton.yaml
-            to: ./content/skeletons/${{ parameters.teamName }}.yaml
+  #   - id: rename_file
+  #     name: Rename templated file
+  #     action: fs:rename
+  #     input:
+  #       files:
+  #         - from: ./content/skeletons/team-skeleton.yaml
+  #           to: ./content/skeletons/${{ parameters.teamName }}.yaml
 
-    - id: publish-pr
-      name: Publish Pull Request
-      action: publish:github:pull-request
-      input:
-        repoUrl: github.com?repo=kitchen&owner=rancher-eio
-        title: "Creating team - ${{ parameters.teamName }}"
-        description: "This PR creates a new team"
-        branchName: "add-new-team-${{ parameters.teamName }}"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
-        sourcePath: ./content/skeletons
-        targetPath: ./manifests/github-resources/resources/Team/
-        # reviewers:
-        #   - "${{ parameters.manager }}"
-        teamReviewers:
-          - "eio"
-        # files:
-        #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
-        #'**/*.yaml': 'manifests/github-resources/resources/Team/'
+  #   - id: publish-pr
+  #     name: Publish Pull Request
+  #     action: publish:github:pull-request
+  #     input:
+  #       repoUrl: github.com?repo=kitchen&owner=rancher-eio
+  #       title: "Creating team - ${{ parameters.teamName }}"
+  #       description: "This PR creates a new team"
+  #       branchName: "add-new-team-${{ parameters.teamName }}"
+  #       token: ${{ secrets.GITHUB_TOKEN }}
+  #       commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
+  #       sourcePath: ./content/skeletons
+  #       targetPath: ./manifests/github-resources/resources/Team/
+  #       # reviewers:
+  #       #   - "${{ parameters.manager }}"
+  #       teamReviewers:
+  #         - "eio"
+  #       # files:
+  #       #   "./content/${{ parameters.teamName }}.yaml": "manifests/github-resources/resources/Team/"
+  #       #'**/*.yaml': 'manifests/github-resources/resources/Team/'
 
-    - id: dispatch-workflow
-      name: Trigger Workflow
-      action: github:actions:dispatch
-      input:
-        repoUrl: "github.com?repo=backstage-templates&owner=rancher-eio"
-        workflowId: "update-team-components.yml"
-        branchOrTagName: "main"
-        workflowInputs:
-          teamName: ${{ parameters.teamName }}
-        token: '${{ secrets.GITHUB_TOKEN }}'
+  #   - id: dispatch-workflow
+  #     name: Trigger Workflow
+  #     action: github:actions:dispatch
+  #     input:
+  #       repoUrl: "github.com?repo=backstage-templates&owner=rancher-eio"
+  #       workflowId: "update-team-components.yml"
+  #       branchOrTagName: "main"
+  #       workflowInputs:
+  #         teamName: ${{ parameters.teamName }}
+  #       token: '${{ secrets.GITHUB_TOKEN }}'
 
-    - id: register
-      name: Register
-      action: catalog:register
-      input:
-        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-component.yaml
-        optional: true
-        # repoContentsUrl: ${{ steps['publish-pr'].output.repoContentsUrl }}
-        # catalogInfoPath: '/catalog-info.yaml'
+  #   - id: register
+  #     name: Register
+  #     action: catalog:register
+  #     input:
+  #       catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-component.yaml
+  #       optional: true
+  #       # repoContentsUrl: ${{ steps['publish-pr'].output.repoContentsUrl }}
+  #       # catalogInfoPath: '/catalog-info.yaml'
 
-  output:
-    links:
-      - title: Pull Request URL
-        url: ${{ steps['publish-pr'].output.remoteUrl }}
+  # output:
+  #   links:
+  #     - title: Pull Request URL
+  #       url: ${{ steps['publish-pr'].output.remoteUrl }}
       # - title: Open in catalog
       #   icon: catalog
       #   entityRef: ${{ steps['register'].output.entityRef }}
