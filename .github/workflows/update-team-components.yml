@@ -20,11 +20,11 @@ jobs:
         token: ${{secrets.RANCHER_EIO_GITHUB_TOKEN}}
 
     - name: Create components directory
-      run: mkdir -p ./github/create-team/components
+      run: mkdir -p ./github/team-creation/components
 
     - name: Create new team component file from template
       run: |
-        sed "s/TEAM_NAME/${{ github.event.inputs.teamName }}/g" ./github/create-team/component-template.yaml > ./github/create-team/components/${{ github.event.inputs.teamName }}-component.yaml
+        sed "s/TEAM_NAME/${{ github.event.inputs.teamName }}/g" ./github/team-creation/component-template.yaml > ./github/team-creation/components/${{ github.event.inputs.teamName }}-component.yaml
 
     - name: Install yq (YAML Processor)
       run: |
@@ -32,7 +32,7 @@ jobs:
 
     - name: Update team-components.yaml
       run: |
-        yq e ".spec.targets += [\"./components/${{ github.event.inputs.teamName }}-component.yaml\"]" -i ./github/create-team/team-components.yaml
+        yq e ".spec.targets += [\"./components/${{ github.event.inputs.teamName }}-component.yaml\"]" -i ./github/team-creation/team-components.yaml
 
     # - name: Set Git Remote URL with Token
     #   run: git remote set-url origin https://x-access-token:${{ secrets.RANCHER_EIO_GITHUB_TOKEN }}@github.com/rancher-eio/backstage-templates.git
