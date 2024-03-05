@@ -44,20 +44,20 @@ spec:
           title: Team Name
           type: string
           description: Name of the GitHub team
-        # parentTeamId:
-        #   title: Parent Team ID
-        #   type: number
-        #   description: (Optional) ID of the parent GitHub team for nested teams
-        # manager:
-        #   title: Manager Git Handle
-        #   type: string
-        #   description: Manager who would approve the request
+        parentTeamId:
+          title: Parent Team ID
+          type: number
+          description: (Optional) ID of the parent GitHub team for nested teams
+        manager:
+          title: Manager Git Handle
+          type: string
+          description: Manager who would approve the request
   steps:
     - id: fetch-base
       name: Fetch Skeleton + Template
       action: fetch:template
       input:
-        url: https://github.com/rancher-eio/backstage-templates/tree/main/github/create-team
+        url: https://github.com/rancher-eio/backstage-templates/tree/main/github/team-creation
         targetPath: content
         values:
           teamName: ${{ parameters.teamName }}
@@ -101,7 +101,7 @@ spec:
       name: Register
       action: catalog:register
       input:
-        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-component.yaml
+        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/team-creation/components/${{ parameters.teamName }}-component.yaml
         optional: true
         # repoContentsUrl: ${{ steps['publish-pr'].output.repoContentsUrl }}
         # catalogInfoPath: '/catalog-info.yaml'
