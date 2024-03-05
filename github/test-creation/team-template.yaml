@@ -17,6 +17,29 @@ spec:
           title: Github Org
           type: string
           description: Name of the GitHub organization
+          default: rancherlabs
+          enum:
+            - rancher
+            - rancherlabs
+            - rancher-eio
+            - longhorn
+            - harvester
+            - k3s-io
+            - rancher-sandbox
+            - rancher-plugins
+            - flannel-io
+            - SUSE
+          enumNames:
+            - 'rancher'
+            - 'rancherlabs'
+            - 'rancher-eio'
+            - 'longhorn'
+            - 'harvester'
+            - 'k3s-io'
+            - 'rancher-sandbox'
+            - 'rancher-plugins'
+            - 'flannel-io'
+            - 'SUSE'
         teamName:
           title: Team Name
           type: string
