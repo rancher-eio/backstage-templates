@@ -73,3 +73,20 @@ spec:
         workflowInputs:
           teamName: ${{ parameters.teamName }}
         token: '${{ secrets.GITHUB_TOKEN }}'
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        catalogInfoUrl: https://github.com/rancher-eio/backstage-templates/blob/main/github/create-team/components/${{ parameters.teamName }}-component.yaml
+        optional: true
+        # repoContentsUrl: ${{ steps['publish-pr'].output.repoContentsUrl }}
+        # catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Pull Request URL
+        url: ${{ steps['publish-pr'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
