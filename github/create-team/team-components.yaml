@@ -6,3 +6,4 @@ metadata:
 spec:
   targets:
     - ./components/sample-component.yaml
+    - ./components/sample-2-component.yaml
