@@ -62,3 +62,14 @@ spec:
         targetPath: ./manifests/github-resources/resources/Team/
         teamReviewers:
           - "eio"
+
+    - id: dispatch-workflow
+      name: Trigger Workflow
+      action: github:actions:dispatch
+      input:
+        repoUrl: "github.com?repo=backstage-templates&owner=rancher-eio"
+        workflowId: "update-team-components.yml"
+        branchOrTagName: "main"
+        workflowInputs:
+          teamName: ${{ parameters.teamName }}
+        token: '${{ secrets.GITHUB_TOKEN }}'
