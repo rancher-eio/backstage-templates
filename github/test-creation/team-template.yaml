@@ -52,7 +52,7 @@ spec:
       name: Publish Pull Request
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=kitchen&owner=rancher-eio
+        repoUrl: github.com?repo=github&owner=rancher-eio
         title: "Creating team - ${{ parameters.teamName }}"
         description: "This PR creates a new team"
         branchName: "add-new-team-${{ parameters.teamName }}"
