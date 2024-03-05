@@ -100,9 +100,9 @@ spec:
     links:
       - title: Pull Request URL
         url: ${{ steps['publish-pr'].output.remoteUrl }}
-      - title: Open in catalog
-        icon: catalog
-        entityRef: ${{ steps['register'].output.entityRef }}
+      # - title: Open in catalog
+      #   icon: catalog
+      #   entityRef: ${{ steps['register'].output.entityRef }}
 
 # apiVersion: scaffolder.backstage.io/v1beta3
 # kind: Template
