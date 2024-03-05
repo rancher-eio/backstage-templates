@@ -21,6 +21,7 @@ spec:
           title: Team Name
           type: string
           description: Name of the GitHub team
+<<<<<<< Updated upstream
         # parentTeamId:
         #   title: Parent Team ID
         #   type: number
@@ -29,6 +30,25 @@ spec:
         #   title: Manager Git Handle
         #   type: string
         #   description: Manager who would approve the request
+=======
+        parentTeamId:
+          title: Parent Team ID
+          type: number
+          description: (Optional) ID of the parent GitHub team for nested teams
+        manager:
+          title: Manager Github Name
+          type: object
+          description: Manager who would approve the request
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: User
+          # ui:field: EntityPicker
+          # ui:options:
+          #   catalogFilter:
+          #     kind: Group
+          #     'spec.type': team
+>>>>>>> Stashed changes
   steps:
     - id: fetch-base
       name: Fetch Skeleton + Template
