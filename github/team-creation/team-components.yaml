@@ -4,4 +4,5 @@ metadata:
   name: team-components
   description: A collection of all team components
 spec:
-  targets: []
+  targets:
+    - ./components/sample-0-component.yaml
