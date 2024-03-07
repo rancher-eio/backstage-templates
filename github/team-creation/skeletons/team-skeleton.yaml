@@ -2,7 +2,7 @@ apiVersion: team.github.upbound.io/v1alpha1
 kind: Team
 metadata:
   name: ${{ values.teamName | lower }}
-  namespace: github-resources
+  namespace: github-org-${{ values.orgName | lower }}
   annotations:
     backstage.io/kubernetes-id: ${{ values.teamName }}
   labels:
