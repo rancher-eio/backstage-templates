@@ -7,3 +7,4 @@ spec:
   targets:
     - ./components/sample-0-component.yaml
     - ./components/sample-1-component.yaml
+    - ./components/sample-3-component.yaml
