@@ -82,7 +82,8 @@ spec:
         token: ${{ secrets.GITHUB_TOKEN }}
         commitMessage: "Adding team ${{ parameters.teamName }} to ${{ parameters.orgName }}"
         sourcePath: ./content/skeletons
-        targetPath: ./manifests/github-resources/resources/Team/
+        targetPath: "./manifests/github-org-${{ parameters.orgName }}/resources/Team/"
+        #targetPath: ./manifests/github-resources/resources/Team/
         teamReviewers:
           - "eio"
 
