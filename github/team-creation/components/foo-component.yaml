@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: foo
+  #description: ${{values.description | dump}}
+  annotations:
+    backstage.io/kubernetes-id: foo
+spec:
+  type: service
+  lifecycle: experimental
+  owner: rancher-eio/eio

@@ -10,3 +10,4 @@ spec:
     - ./components/sample-3-component.yaml
     - ./components/sample-4-component.yaml
     - ./components/sample-4-component.yaml
+    - ./components/foo-component.yaml
