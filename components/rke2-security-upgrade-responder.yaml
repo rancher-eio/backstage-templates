@@ -1,0 +1,14 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rke2-security-upgrade-responder
+  description: rke2-security upgrade-responder service
+  annotations:
+    backstage.io/kubernetes-id: rke2-security-upgrade-responder
+    github.com/project-slug: rancher/upgrade-responders
+spec:
+  type: service
+  lifecycle: development
+  owner: rke2-security
+  system: applications
