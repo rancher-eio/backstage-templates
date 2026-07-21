@@ -1,0 +1,14 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: channelserver-rancher
+  description: channelserver for rancher
+  annotations:
+    backstage.io/kubernetes-id: channelserver-rancher
+    github.com/project-slug: rancher/channelserver
+spec:
+  type: service
+  lifecycle: development
+  owner: release-team
+  system: applications
