@@ -10,5 +10,5 @@ metadata:
 spec:
   type: service
   lifecycle: development
-  owner: release-team
+  owner: k3s
   system: applications
