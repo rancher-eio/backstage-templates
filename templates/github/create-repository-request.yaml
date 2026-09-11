@@ -3,10 +3,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: create-repository-request
-  title: Create GitHub Repository (with access, protection & secrets)
-  description: >-
-    Request a GitHub repository together with its team access, collaborators,
-    branch protection and secrets, as a single KRO RepositoryRequest.
+  title: Create a GitHub Repository
+  description: Set up a repository with the right team access and secrets.
   tags:
     - github
     - repository
@@ -70,9 +68,7 @@ spec:
                   enum: [false]
 
     - title: Access
-      description: >-
-        Who should have access once the repository exists? Collaborators must
-        already be members of the org, or the request will be rejected.
+      description: Collaborators must already be members of the org.
       properties:
         teams:
           title: Team Access
@@ -112,11 +108,7 @@ spec:
                 default: pull
 
     - title: Branch Protection
-      description: >-
-        Leave the branch list empty to create the repository with default org-level branch protection.
-        Signed commits and `evaluate` enforcement are not offered here because
-        workflow_dispatch allows only 10 inputs — set them by editing the
-        manifest in the generated pull request.
+      description: Leave empty to use your org's default protection.
       properties:
         protectedBranches:
           title: Protected Branches
@@ -135,9 +127,7 @@ spec:
           description: Approvals needed before a pull request can be merged
 
     - title: Secrets
-      description: >-
-        Only the secrets listed here can be synced today. If you need one that
-        is not listed, open an issue with EIO.
+      description: Need one that isn't listed? Open an issue with EIO.
       properties:
         secrets:
           title: Secrets
@@ -180,7 +170,7 @@ spec:
           **Organization:** ${{ parameters.org }}
           **New repository:** ${{ parameters.create and 'yes' or 'no, adopting an existing one' }}
           **Visibility:** ${{ parameters.visibility and '`' + parameters.visibility + '`' or '_unchanged_' }}
-          **Requested by:** @${{ user.entity.metadata.name }}
+          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
           ### Description
           ${{ parameters.description }}
@@ -238,7 +228,7 @@ spec:
           secrets: ${{ parameters.secrets | join(',') }}
           protectedBranches: ${{ parameters.protectedBranches | join(',') }}
           requiredApprovals: ${{ parameters.requiredApprovals | string }}
-          tracking: ${{ user.entity.metadata.name }}:${{ steps['create-issue'].output.issueNumber }}
+          tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
   output:
     text:

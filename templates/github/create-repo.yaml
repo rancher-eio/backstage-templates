@@ -70,7 +70,7 @@ spec:
           **Repository:** `${{ parameters.org }}/${{ parameters.name }}`
           **Organization:** ${{ parameters.org }}
           **Visibility:** `${{ parameters.visibility }}`
-          **Requested by:** @${{ user.entity.metadata.name }}
+          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
           ### Description
           ${{ parameters.description }}
@@ -84,7 +84,7 @@ spec:
 
           - [ ] Pull request created
           - [ ] EIO team review
-          - [ ] Pull request merged
+          - [ ] Pull requtest merged
           - [ ] Flux sync
           - [ ] Repository provisioned
 
@@ -110,7 +110,7 @@ spec:
           visibility: ${{ parameters.visibility }}
           description: ${{ parameters.description }}
           justification: ${{ parameters.justification }}
-          requestedBy: ${{ user.entity.metadata.name }}
+          requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
           issueNumber: ${{ steps['create-issue'].output.issueNumber | string }}
           issueRepo: rancher-eio/issues
           # issueRepo: rancherlabs/eio
