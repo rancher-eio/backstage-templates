@@ -1,0 +1,265 @@
+---
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-repository-request
+  title: Create GitHub Repository (with access, protection & secrets)
+  description: >-
+    Request a GitHub repository together with its team access, collaborators,
+    branch protection and secrets, as a single KRO RepositoryRequest.
+  tags:
+    - github
+    - repository
+    - self-service
+spec:
+  owner: group:eio
+  type: service
+  system: github-management
+
+  parameters:
+    - title: Repository Details
+      required:
+        - org
+        - name
+      properties:
+        org:
+          title: GitHub Organization
+          type: string
+          description: Which org should this repo be created in?
+          # Each org listed here needs add-repository-request.yaml in its `org` repo.
+          enum: [rancherlabs, rancher, rancher-eio]
+          default: rancherlabs
+          ui:autofocus: true
+
+        name:
+          title: Repository Name
+          type: string
+          description: Name of the repository (without org prefix)
+          pattern: '^[a-z0-9][a-z0-9._-]*$'
+          ui:help: Lowercase letters, numbers, dots, hyphens and underscores only
+
+        create:
+          title: Create the repository
+          type: boolean
+          default: true
+          description: >-
+            Untick if the repository already exists and you only want to manage
+            its access, branch protection and secrets.
+
+      # Visibility and description only mean something for a repository we are
+      # about to create, so they are hidden rather than collected and ignored.
+      dependencies:
+        create:
+          oneOf:
+            - properties:
+                create:
+                  enum: [true]
+                visibility:
+                  title: Visibility
+                  type: string
+                  description: Who can see this repository?
+                  enum: [private, public, internal]
+                  default: private
+                description:
+                  title: Description
+                  type: string
+              required: [visibility]
+
+            - properties:
+                create:
+                  enum: [false]
+
+    - title: Access
+      description: >-
+        Who should have access once the repository exists? Collaborators must
+        already be members of the org, or the request will be rejected.
+      properties:
+        teams:
+          title: Team Access
+          type: array
+          default: []
+          items:
+            type: object
+            required: [slug, permission]
+            properties:
+              slug:
+                title: Team
+                type: string
+                pattern: '^[a-z0-9][a-z0-9-]*$'
+                ui:help: 'Team slug, e.g. eio'
+              permission:
+                title: Permission
+                type: string
+                enum: [pull, triage, push, maintain, admin]
+                default: pull
+
+        collaborators:
+          title: Individual Collaborators
+          type: array
+          default: []
+          items:
+            type: object
+            required: [username, permission]
+            properties:
+              username:
+                title: GitHub Username
+                type: string
+                pattern: '^[A-Za-z0-9][A-Za-z0-9-]*$'
+              permission:
+                title: Permission
+                type: string
+                enum: [pull, triage, push, maintain, admin]
+                default: pull
+
+    - title: Branch Protection
+      description: >-
+        Leave the branch list empty to create the repository with default org-level branch protection.
+        Signed commits and `evaluate` enforcement are not offered here because
+        workflow_dispatch allows only 10 inputs — set them by editing the
+        manifest in the generated pull request.
+      properties:
+        protectedBranches:
+          title: Protected Branches
+          type: array
+          default: []
+          items:
+            type: string
+          ui:help: 'Branch names, without refs/heads/. e.g. main'
+
+        requiredApprovals:
+          title: Required Approvals
+          type: integer
+          default: 0
+          minimum: 0
+          maximum: 10
+          description: Approvals needed before a pull request can be merged
+
+    - title: Secrets
+      description: >-
+        Only the secrets listed here can be synced today. If you need one that
+        is not listed, open an issue with EIO.
+      properties:
+        secrets:
+          title: Secrets
+          type: array
+          default: []
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - 'dockerhub/rancher:dockerhub-rancher'
+              - 'rancher-prime-registry:rancher-suse-registry'
+              - 'rancher-prime-registry-stg:rancher-suse-stg-registry'
+            enumNames:
+              - 'DockerHub Registry'
+              - 'Rancher Prime Registry'
+              - 'Rancher Prime Staging Registry'
+          ui:widget: checkboxes
+
+    - title: Additional Information
+      properties:
+        justification:
+          title: Why do you need this repo?
+          type: string
+          ui:widget: textarea
+          ui:options:
+            rows: 3
+
+  steps:
+    - id: create-issue
+      name: Creating issue for tracking
+      action: github:issues:create
+      input:
+        #repoUrl: github.com?repo=issues&owner=rancher-eio
+        repoUrl: github.com?repo=eio&owner=rancherlabs
+        title: 'Create Repository Request: ${{ parameters.org }}/${{ parameters.name }}'
+        body: |
+          ## Create Repository Request
+
+          **Repository:** `${{ parameters.org }}/${{ parameters.name }}`
+          **Organization:** ${{ parameters.org }}
+          **New repository:** ${{ parameters.create and 'yes' or 'no, adopting an existing one' }}
+          **Visibility:** ${{ parameters.visibility and '`' + parameters.visibility + '`' or '_unchanged_' }}
+          **Requested by:** @${{ user.entity.metadata.name }}
+
+          ### Description
+          ${{ parameters.description }}
+
+          ### Requested Access
+          **Teams:** `${{ parameters.teams | dump }}`
+          **Collaborators:** `${{ parameters.collaborators | dump }}`
+
+          ### Branch Protection
+          **Branches:** ${{ parameters.protectedBranches | join(', ') or '_none_' }}
+          **Required approvals:** ${{ parameters.requiredApprovals }}
+
+          ### Secrets
+          ${{ parameters.secrets | join(', ') or '_none_' }}
+
+          ### Justification
+          ${{ parameters.justification }}
+
+          ---
+
+          ## Progress
+
+          - [ ] Pull request created
+          - [ ] EIO team review
+          - [ ] Pull request merged
+          - [ ] Flux sync
+          - [ ] Resources provisioned
+
+          ---
+
+          _This issue will be automatically updated as your request progresses._
+        labels:
+          - backstage-request
+          - github
+          - resolution-automated
+
+    - id: trigger-workflow
+      name: Triggering workflow
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=org&owner=${{ parameters.org }}
+        # repoUrl: github.com?repo=testing&owner=rancher
+        workflowId: add-repository-request.yaml
+        branchOrTagName: main
+        # Ten inputs is the workflow_dispatch limit, so requester and issue
+        # travel together. Visibility falls back because the form hides it
+        # when the repository already exists, and `choice` rejects an empty value.
+        workflowInputs:
+          name: ${{ parameters.name }}
+          create: ${{ parameters.create | string }}
+          visibility: ${{ parameters.visibility or 'private' }}
+          description: ${{ parameters.description or '' }}
+          teams: ${{ parameters.teams | dump }}
+          collaborators: ${{ parameters.collaborators | dump }}
+          secrets: ${{ parameters.secrets | join(',') }}
+          protectedBranches: ${{ parameters.protectedBranches | join(',') }}
+          requiredApprovals: ${{ parameters.requiredApprovals | string }}
+          tracking: ${{ user.entity.metadata.name }}:${{ steps['create-issue'].output.issueNumber }}
+
+  output:
+    text:
+      - title: Repository Request Submitted!
+        content: |
+          ✅ **Request Created**
+
+          Your repository request for `${{ parameters.org }}/${{ parameters.name }}` is being processed.
+
+          **You'll receive GitHub notifications at each stage:**
+          1. PR created (~2 min)
+          2. EIO team review (1-3 days)
+          3. Resources ready (~5 min after merge)
+
+          All updates will be posted to the tracking issue below.
+
+    links:
+      - title: View Workflow
+        icon: dashboard
+        url: https://github.com/${{ parameters.org }}/org/actions/workflows/add-repository-request.yaml
+
+      - title: Track Request
+        icon: github
+        url: ${{ steps['create-issue'].output.issueUrl }}
