@@ -118,13 +118,23 @@ spec:
             type: string
           ui:help: 'Branch names, without refs/heads/. e.g. main'
 
-        requiredApprovals:
-          title: Required Approvals
-          type: integer
-          default: 0
-          minimum: 0
-          maximum: 10
-          description: Approvals needed before a pull request can be merged
+      dependencies:
+        protectedBranches:
+          oneOf:
+            - properties:
+                protectedBranches:
+                  minItems: 1
+                requiredApprovals:
+                  title: Required Approvals
+                  type: integer
+                  default: 0
+                  minimum: 0
+                  maximum: 10
+                  description: Approvals needed before a pull request can be merged
+
+            - properties:
+                protectedBranches:
+                  maxItems: 0
 
     - title: Secrets
       description: Need one that isn't listed? Open an issue with EIO.
@@ -137,9 +147,9 @@ spec:
           items:
             type: string
             enum:
-              - 'dockerhub/rancher:dockerhub-rancher'
-              - 'rancher-prime-registry:rancher-suse-registry'
-              - 'rancher-prime-registry-stg:rancher-suse-stg-registry'
+              - 'dockerhub/rancher:import-dockerhub-rancher'
+              - 'rancher-prime-registry:import-rancher-suse-registry'
+              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
             enumNames:
               - 'DockerHub Registry'
               - 'Rancher Prime Registry'
