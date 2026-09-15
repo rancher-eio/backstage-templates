@@ -1,0 +1,69 @@
+---
+apiVersion: eio.rancher.engineering/v1alpha1
+kind: RepositoryRequest
+metadata:
+  name: ${{ values.name }}
+  {%- if values.issueNumber %}
+  annotations:
+    github.eio.rancher.engineering/issue-number: "${{ values.issueNumber }}"
+    github.eio.rancher.engineering/requested-by: "${{ values.requestedBy }}"
+  {%- endif %}
+spec:
+  org: ${{ values.org }}
+  repoName: ${{ values.name }}
+  repository:
+    create: ${{ values.create }}
+    visibility: ${{ values.visibility }}
+    {%- if values.description %}
+    description: "${{ values.description }}"
+    {%- else %}
+    description: ""
+    {%- endif %}
+  {%- if values.teams and values.teams.length > 0 %}
+  teams:
+  {%- for team in values.teams %}
+  - slug: ${{ team.slug }}
+    permission: ${{ team.permission }}
+  {%- endfor %}
+  {%- else %}
+  teams: []
+  {%- endif %}
+  {%- if values.collaborators and values.collaborators.length > 0 %}
+  collaborators:
+  {%- for collaborator in values.collaborators %}
+  - username: ${{ collaborator.username }}
+    permission: ${{ collaborator.permission }}
+  {%- endfor %}
+  {%- else %}
+  collaborators: []
+  {%- endif %}
+  branchProtection:
+    {%- if values.protectedBranches and values.protectedBranches.length > 0 %}
+    enabled: true
+    {%- if values.rulesetName %}
+    name: ${{ values.rulesetName }}
+    {%- endif %}
+    branches:
+    {%- for branch in values.protectedBranches %}
+    - ${{ branch }}
+    {%- endfor %}
+    {%- if values.enforcement %}
+    enforcement: ${{ values.enforcement }}
+    {%- endif %}
+    requiredApprovals: ${{ values.requiredApprovals }}
+    {%- if values.requireSignatures %}
+    requireSignatures: ${{ values.requireSignatures }}
+    {%- endif %}
+    {%- else %}
+    enabled: false
+    {%- endif %}
+  {%- if values.secrets and values.secrets.length > 0 %}
+  secrets:
+  {%- for secret in values.secrets %}
+  {%- set parts = secret.split(':') %}
+  - vaultPath: ${{ parts[0] }}
+    source: ${{ parts[1] }}
+  {%- endfor %}
+  {%- else %}
+  secrets: []
+  {%- endif %}
