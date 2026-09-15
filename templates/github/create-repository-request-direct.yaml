@@ -233,7 +233,7 @@ spec:
           - resolution-automated
 
     - id: template-manifest
-      name: Templating RepositoryRequest manifest
+      name: Preparing RepositoryRequest manifest
       action: fetch:template
       input:
         url: ./content
@@ -256,7 +256,7 @@ spec:
           requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
     - id: create-pr
-      name: Creating pull request
+      name: Submitting PR for review
       action: publish:github:pull-request
       input:
         repoUrl: github.com?repo=org&owner=${{ parameters.org }}
@@ -285,7 +285,7 @@ spec:
           ${{ parameters.justification }}
 
     - id: request-vault-role
-      name: Requesting Vault role
+      name: Requesting Vault role for secrets access
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=internal-production&owner=rancher-eio
@@ -300,17 +300,12 @@ spec:
           repo: ${{ parameters.name }}
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
-    - id: update-issue
-      name: Updating tracking issue
-      action: github:issues:comment
-      input:
-        repoUrl: github.com?repo=eio&owner=rancherlabs
-        issueNumber: ${{ steps['create-issue'].output.issueNumber }}
-        body: |
-          🔵 Pull request created: ${{ steps['create-pr'].output.remoteUrl }}
-
-          🔵 Vault role requested in `rancher-eio/internal-production`. A second
-          pull request will follow shortly, unless the role already exists.
+    # Both pull requests announce themselves on the tracking issue through
+    # GitHub's own cross-references: this one quotes the issue URL in its
+    # description above, and add-vault-role-and-policy.yaml does the same in
+    # the body it builds. There is no `github:issues:comment` action to post
+    # them explicitly -- the github module ships only `issues:create` and
+    # `issues:label`.
 
   output:
     text:

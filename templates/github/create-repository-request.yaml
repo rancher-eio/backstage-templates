@@ -216,7 +216,7 @@ spec:
           - resolution-automated
 
     - id: trigger-workflow
-      name: Triggering workflow
+      name: Submitting PR for review
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=org&owner=${{ parameters.org }}
@@ -240,7 +240,7 @@ spec:
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
     - id: request-vault-role
-      name: Requesting Vault role
+      name: Requesting Vault role for secrets access
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=internal-production&owner=rancher-eio
