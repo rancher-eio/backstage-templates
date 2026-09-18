@@ -4,7 +4,7 @@ kind: Template
 metadata:
   name: create-repository-request-direct
   title: Create a GitHub Repository (Direct)
-  description: Set up a repository with the right team access and secrets. Creates PR directly to internal-production.
+  description: Set up a repository with the right team access. Creates PR directly to internal-production.
   tags:
     - github
     - repository
@@ -41,7 +41,7 @@ spec:
           default: true
           description: >-
             Untick if the repository already exists and you only want to manage
-            its access, branch protection and secrets.
+            its access and branch protection.
 
       dependencies:
         create:
@@ -149,25 +149,35 @@ spec:
                 protectedBranches:
                   maxItems: 0
 
-    - title: Secrets
-      description: Need one that isn't listed? Open an issue with EIO.
+    - title: Docker Hub
+      description: Docker Hub repositories this repository pushes to.
       properties:
-        secrets:
-          title: Secrets
+        dockerhub:
+          title: Docker Hub Repositories
           type: array
           default: []
-          uniqueItems: true
           items:
-            type: string
-            enum:
-              - 'dockerhub/rancher:import-dockerhub-rancher'
-              - 'rancher-prime-registry:import-rancher-suse-registry'
-              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
-            enumNames:
-              - 'DockerHub Registry'
-              - 'Rancher Prime Registry'
-              - 'Rancher Prime Staging Registry'
-          ui:widget: checkboxes
+            type: object
+            required: [namespace, name]
+            properties:
+              namespace:
+                title: Namespace
+                type: string
+                enum: [rancher, rancherlabs]
+                default: rancher
+              name:
+                title: Repository
+                type: string
+                pattern: '^[a-z0-9][a-z0-9._-]*$'
+              visibility:
+                title: Visibility
+                type: string
+                enum: [public, private]
+                default: private
+              exists:
+                title: Already exists
+                type: boolean
+                default: false
 
     - title: Additional Information
       properties:
@@ -208,8 +218,14 @@ spec:
           **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
           **Require signatures:** ${{ parameters.requireSignatures or false }}
 
-          ### Secrets
-          ${{ parameters.secrets | join(', ') or '_none_' }}
+          ### Docker Hub
+          {%- if parameters.dockerhub and parameters.dockerhub.length > 0 %}
+          {% for repo in parameters.dockerhub %}
+          - [ ] `${{ repo.namespace }}/${{ repo.name }}` — ${{ repo.visibility or 'private' }}${{ repo.exists and ' (exists, access only)' or '' }}
+          {%- endfor %}
+          {%- else %}
+          _none_
+          {%- endif %}
 
           ### Justification
           ${{ parameters.justification }}
@@ -232,6 +248,16 @@ spec:
           - github
           - resolution-automated
 
+    - id: label-dockerhub
+      name: Flagging Docker Hub work
+      if: ${{ parameters.dockerhub and parameters.dockerhub.length > 0 }}
+      action: github:issues:label
+      input:
+        repoUrl: github.com?repo=eio&owner=rancherlabs
+        number: ${{ steps['create-issue'].output.issueNumber }}
+        labels:
+          - needs-dockerhub
+
     - id: template-manifest
       name: Preparing RepositoryRequest manifest
       action: fetch:template
@@ -251,7 +277,6 @@ spec:
           enforcement: ${{ parameters.enforcement or 'active' }}
           requiredApprovals: ${{ parameters.requiredApprovals or 0 }}
           requireSignatures: ${{ parameters.requireSignatures or false }}
-          secrets: ${{ parameters.secrets }}
           issueNumber: ${{ steps['create-issue'].output.issueNumber }}
           requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
@@ -279,7 +304,6 @@ spec:
           - **Enforcement:** ${{ parameters.enforcement or 'active' }}
           - **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
           - **Require signatures:** ${{ parameters.requireSignatures or false }}
-          - **Secrets:** ${{ parameters.secrets.length or 0 }}
 
           ### Justification
           ${{ parameters.justification }}

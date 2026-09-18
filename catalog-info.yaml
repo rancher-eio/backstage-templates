@@ -9,4 +9,5 @@ spec:
     - ./components/*.yaml
     - ./systems/*.yaml
     - ./templates/github/*.yaml
+    - ./templates/dockerhub/*.yaml
     - ./templates/secrets/*.yaml
