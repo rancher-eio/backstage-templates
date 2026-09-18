@@ -29,7 +29,7 @@ spec:
             required: [namespace, name]
             properties:
               namespace:
-                title: Namespace
+                title: Docker Hub Organization
                 type: string
                 enum: [rancher, rancherlabs]
                 default: rancher

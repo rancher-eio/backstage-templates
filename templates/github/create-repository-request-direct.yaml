@@ -161,7 +161,7 @@ spec:
             required: [namespace, name]
             properties:
               namespace:
-                title: Namespace
+                title: Docker Hub Organization
                 type: string
                 enum: [rancher, rancherlabs]
                 default: rancher
@@ -174,10 +174,6 @@ spec:
                 type: string
                 enum: [public, private]
                 default: private
-              exists:
-                title: Already exists
-                type: boolean
-                default: false
 
     - title: Secrets
       description: Need one that isn't listed? Open an issue with EIO.
@@ -241,7 +237,7 @@ spec:
           ### Docker Hub
           {%- if parameters.dockerhub and parameters.dockerhub.length > 0 %}
           {% for repo in parameters.dockerhub %}
-          - [ ] `${{ repo.namespace }}/${{ repo.name }}` — ${{ repo.visibility or 'private' }}${{ repo.exists and ' (exists, access only)' or '' }}
+          - [ ] `${{ repo.namespace }}/${{ repo.name }}` — ${{ repo.visibility or 'private' }}
           {%- endfor %}
           {%- else %}
           _none_
@@ -272,7 +268,7 @@ spec:
           - resolution-automated
 
     - id: label-dockerhub
-      name: Flagging Docker Hub work
+      name: Adding label for Docker Hub repo creation
       if: ${{ parameters.dockerhub and parameters.dockerhub.length > 0 }}
       action: github:issues:label
       input:
