@@ -179,6 +179,26 @@ spec:
                 type: boolean
                 default: false
 
+    - title: Secrets
+      description: Need one that isn't listed? Open an issue with EIO.
+      properties:
+        secrets:
+          title: Secrets
+          type: array
+          default: []
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - 'dockerhub/rancher:import-dockerhub-rancher'
+              - 'rancher-prime-registry:import-rancher-suse-registry'
+              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
+            enumNames:
+              - 'DockerHub Registry'
+              - 'Rancher Prime Registry'
+              - 'Rancher Prime Staging Registry'
+          ui:widget: checkboxes
+
     - title: Additional Information
       properties:
         justification:
@@ -227,6 +247,9 @@ spec:
           _none_
           {%- endif %}
 
+          ### Secrets
+          ${{ parameters.secrets | join(', ') or '_none_' }}
+
           ### Justification
           ${{ parameters.justification }}
 
@@ -273,6 +296,7 @@ spec:
           teams: ${{ parameters.teams }}
           collaborators: ${{ parameters.collaborators }}
           protectedBranches: ${{ parameters.protectedBranches }}
+          secrets: ${{ parameters.secrets }}
           rulesetName: ${{ parameters.rulesetName or 'main' }}
           enforcement: ${{ parameters.enforcement or 'active' }}
           requiredApprovals: ${{ parameters.requiredApprovals or 0 }}
@@ -300,6 +324,7 @@ spec:
           - **Visibility:** ${{ parameters.visibility or 'private' }}
           - **Teams:** ${{ parameters.teams.length or 0 }}
           - **Collaborators:** ${{ parameters.collaborators.length or 0 }}
+          - **Secrets:** ${{ parameters.secrets.length or 0 }}
           - **Protected branches:** ${{ parameters.protectedBranches | join(', ') or 'none' }}
           - **Enforcement:** ${{ parameters.enforcement or 'active' }}
           - **Required approvals:** ${{ parameters.requiredApprovals or 0 }}

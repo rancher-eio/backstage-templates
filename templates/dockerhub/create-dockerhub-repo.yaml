@@ -1,0 +1,120 @@
+---
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-dockerhub-repo
+  title: Create a Docker Hub Repository
+  description: Request one or more Docker Hub repositories.
+  tags:
+    - dockerhub
+    - registry
+    - self-service
+spec:
+  owner: group:eio
+  type: service
+  system: github-management
+
+  parameters:
+    - title: Docker Hub
+      required:
+        - repositories
+      properties:
+        repositories:
+          title: Repositories
+          type: array
+          default: []
+          minItems: 1
+          items:
+            type: object
+            required: [namespace, name]
+            properties:
+              namespace:
+                title: Namespace
+                type: string
+                enum: [rancher, rancherlabs]
+                default: rancher
+              name:
+                title: Repository
+                type: string
+                pattern: '^[a-z0-9][a-z0-9._-]*$'
+              visibility:
+                title: Visibility
+                type: string
+                enum: [public, private]
+                default: private
+
+    - title: Access
+      description: Which GitHub repository pushes to these?
+      properties:
+        org:
+          title: GitHub Organization
+          type: string
+          enum: [rancherlabs, rancher, rancher-eio]
+          default: rancherlabs
+        repoName:
+          title: Repository Name
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]*$'
+
+    - title: Additional Information
+      properties:
+        justification:
+          title: Why do you need these repositories?
+          type: string
+          ui:widget: textarea
+          ui:options:
+            rows: 3
+
+  steps:
+    - id: create-issue
+      name: Creating issue for tracking
+      action: github:issues:create
+      input:
+        repoUrl: github.com?repo=eio&owner=rancherlabs
+        title: 'Create Docker Hub Repository Request: ${{ parameters.repositories[0].namespace }}/${{ parameters.repositories[0].name }}${{ parameters.repositories.length > 1 and " (+" + (parameters.repositories.length - 1) + " more)" or "" }}'
+        body: |
+          ## Create Docker Hub Repository Request
+
+          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+          {%- if parameters.repoName %}
+          **GitHub repository:** `${{ parameters.org }}/${{ parameters.repoName }}`
+          {%- endif %}
+
+          ### Repositories
+          {% for repo in parameters.repositories %}
+          - [ ] `${{ repo.namespace }}/${{ repo.name }}` — ${{ repo.visibility or 'private' }}
+          {%- endfor %}
+
+          ### Justification
+          ${{ parameters.justification }}
+
+          ---
+
+          ## Progress
+
+          - [ ] EIO team review
+          - [ ] Repositories created
+          - [ ] Access granted
+        labels:
+          - backstage-request
+          - dockerhub
+          - needs-dockerhub
+
+  output:
+    text:
+      - title: Docker Hub Request Submitted!
+        content: |
+          ✅ **Request Created**
+
+          Your request for ${{ parameters.repositories.length }} Docker Hub repository(s) is being processed.
+
+          **Next steps:**
+          1. EIO team review (1-3 days)
+          2. Repositories created and access granted
+
+          All updates will be posted to the tracking issue below.
+
+    links:
+      - title: Track Request
+        icon: github
+        url: ${{ steps['create-issue'].output.issueUrl }}
