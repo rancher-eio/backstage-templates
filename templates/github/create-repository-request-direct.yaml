@@ -176,24 +176,61 @@ spec:
                 default: private
 
     - title: Secrets
-      description: Need one that isn't listed? Open an issue with EIO.
+      description: Optional. Skip this if the repository doesn't need credentials.
       properties:
-        secrets:
-          title: Secrets
-          type: array
-          default: []
-          uniqueItems: true
-          items:
-            type: string
-            enum:
-              - 'dockerhub/rancher:import-dockerhub-rancher'
-              - 'rancher-prime-registry:import-rancher-suse-registry'
-              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
-            enumNames:
-              - 'DockerHub Registry'
-              - 'Rancher Prime Registry'
-              - 'Rancher Prime Staging Registry'
-          ui:widget: checkboxes
+        registry:
+          title: Registry Account
+          type: string
+          description: Harvester repositories use their own prime registry credentials.
+          enum: [rancher, harvester]
+          enumNames: ['Rancher', 'Harvester']
+          default: rancher
+          ui:widget: radio
+
+      dependencies:
+        registry:
+          oneOf:
+            - properties:
+                registry:
+                  enum: [rancher]
+                secrets:
+                  title: Secrets
+                  description: Need one that isn't listed? Open an issue with EIO.
+                  type: array
+                  default: []
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - 'dockerhub/rancher:import-dockerhub-rancher'
+                      - 'rancher-prime-registry:import-rancher-suse-registry'
+                      - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
+                    enumNames:
+                      - 'DockerHub Registry'
+                      - 'Rancher Prime Registry'
+                      - 'Rancher Prime Staging Registry'
+                  ui:widget: checkboxes
+
+            - properties:
+                registry:
+                  enum: [harvester]
+                secrets:
+                  title: Secrets
+                  description: Need one that isn't listed? Open an issue with EIO.
+                  type: array
+                  default: []
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - 'dockerhub/rancher:import-dockerhub-rancher'
+                      - 'rancher-prime-registry:import-rancher-prime-harvester'
+                      - 'rancher-prime-stg-registry:import-harvester-suse-registry-stg'
+                    enumNames:
+                      - 'DockerHub Registry'
+                      - 'Rancher Prime Registry'
+                      - 'Rancher Prime Staging Registry'
+                  ui:widget: checkboxes
 
     - title: Additional Information
       properties:
@@ -286,6 +323,7 @@ spec:
         values:
           name: ${{ parameters.name }}
           org: ${{ parameters.org }}
+          resourceName: ${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}
           create: ${{ parameters.create }}
           visibility: ${{ parameters.visibility or 'private' }}
           description: ${{ parameters.description or '' }}
@@ -336,21 +374,11 @@ spec:
         repoUrl: github.com?repo=internal-production&owner=rancher-eio
         workflowId: add-vault-role-and-policy.yaml
         branchOrTagName: main
-        # Surfaces workflowRunHtmlUrl so the output can link the exact run.
-        # GitHub may answer the dispatch with 204 and no body, in which case
-        # the output is unset and the link falls back to the run list.
         returnWorkflowRunDetails: true
         workflowInputs:
           org: ${{ parameters.org }}
           repo: ${{ parameters.name }}
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
-
-    # Both pull requests announce themselves on the tracking issue through
-    # GitHub's own cross-references: this one quotes the issue URL in its
-    # description above, and add-vault-role-and-policy.yaml does the same in
-    # the body it builds. There is no `github:issues:comment` action to post
-    # them explicitly -- the github module ships only `issues:create` and
-    # `issues:label`.
 
   output:
     text:
@@ -372,8 +400,6 @@ spec:
         icon: github
         url: ${{ steps['create-pr'].output.remoteUrl }}
 
-      # Prefers the exact run, falling back to the workflow's run history when
-      # the dispatch returns no run details.
       - title: View Vault Role Workflow
         icon: dashboard
         url: ${{ steps['request-vault-role'].output.workflowRunHtmlUrl or 'https://github.com/rancher-eio/internal-production/actions/workflows/add-vault-role-and-policy.yaml' }}

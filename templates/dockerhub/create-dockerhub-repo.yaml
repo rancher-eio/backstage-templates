@@ -49,7 +49,7 @@ spec:
         org:
           title: GitHub Organization
           type: string
-          enum: [rancherlabs, rancher, rancher-eio]
+          enum: [rancherlabs, rancher, rancher-eio, harvester, neuvector, rancher-sandbox]
           default: rancherlabs
         repoName:
           title: Repository Name

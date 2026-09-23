@@ -25,7 +25,7 @@ spec:
           type: string
           description: Which org should this repo be created in?
           # Each org listed here needs add-repository-request.yaml in its `org` repo.
-          enum: [rancherlabs, rancher, rancher-eio]
+          enum: [rancherlabs, rancher, rancher-eio, harvester, neuvector, rancher-sandbox]
           default: rancherlabs
           ui:autofocus: true
 
@@ -135,24 +135,61 @@ spec:
                   maxItems: 0
 
     - title: Secrets
-      description: Need one that isn't listed? Open an issue with EIO.
+      description: Optional. Skip this if the repository doesn't need credentials.
       properties:
-        secrets:
-          title: Secrets
-          type: array
-          default: []
-          uniqueItems: true
-          items:
-            type: string
-            enum:
-              - 'dockerhub/rancher:import-dockerhub-rancher'
-              - 'rancher-prime-registry:import-rancher-suse-registry'
-              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
-            enumNames:
-              - 'DockerHub Registry'
-              - 'Rancher Prime Registry'
-              - 'Rancher Prime Staging Registry'
-          ui:widget: checkboxes
+        registry:
+          title: Registry Account
+          type: string
+          description: Harvester repositories use their own prime registry credentials.
+          enum: [rancher, harvester]
+          enumNames: ['Rancher', 'Harvester']
+          default: rancher
+          ui:widget: radio
+
+      dependencies:
+        registry:
+          oneOf:
+            - properties:
+                registry:
+                  enum: [rancher]
+                secrets:
+                  title: Secrets
+                  description: Need one that isn't listed? Open an issue with EIO.
+                  type: array
+                  default: []
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - 'dockerhub/rancher:import-dockerhub-rancher'
+                      - 'rancher-prime-registry:import-rancher-suse-registry'
+                      - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
+                    enumNames:
+                      - 'DockerHub Registry'
+                      - 'Rancher Prime Registry'
+                      - 'Rancher Prime Staging Registry'
+                  ui:widget: checkboxes
+
+            - properties:
+                registry:
+                  enum: [harvester]
+                secrets:
+                  title: Secrets
+                  description: Need one that isn't listed? Open an issue with EIO.
+                  type: array
+                  default: []
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - 'dockerhub/rancher:import-dockerhub-rancher'
+                      - 'rancher-prime-registry:import-rancher-prime-harvester'
+                      - 'rancher-prime-stg-registry:import-harvester-suse-registry-stg'
+                    enumNames:
+                      - 'DockerHub Registry'
+                      - 'Rancher Prime Registry'
+                      - 'Rancher Prime Staging Registry'
+                  ui:widget: checkboxes
 
     - title: Additional Information
       properties:

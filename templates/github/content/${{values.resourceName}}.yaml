@@ -2,7 +2,7 @@
 apiVersion: eio.rancher.engineering/v1alpha1
 kind: RepositoryRequest
 metadata:
-  name: ${{ values.name }}
+  name: ${{ values.resourceName }}
   {%- if values.issueNumber %}
   annotations:
     github.eio.rancher.engineering/issue-number: "${{ values.issueNumber }}"
