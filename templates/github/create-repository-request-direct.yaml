@@ -181,8 +181,8 @@ spec:
         secrets:
           title: Secrets
           description: >-
-            Pick the entries that match your org. Harvester repositories use the
-            Harvester credentials. Need one that isn't listed? Open an issue with EIO.
+            Pick the account that matches your organization. Need one that isn't
+            listed? Open an issue with EIO.
           type: array
           default: []
           uniqueItems: true
@@ -191,15 +191,15 @@ spec:
             enum:
               - 'dockerhub/rancher:import-dockerhub-rancher'
               - 'rancher-prime-registry:import-rancher-suse-registry'
-              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
               - 'rancher-prime-registry:import-rancher-prime-harvester'
+              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
               - 'rancher-prime-stg-registry:import-harvester-suse-registry-stg'
             enumNames:
               - 'DockerHub Registry'
-              - 'Rancher Prime Registry'
-              - 'Rancher Prime Staging Registry'
-              - 'Rancher Prime Registry (Harvester only)'
-              - 'Rancher Prime Staging Registry (Harvester only)'
+              - 'Rancher Prime Registry — Rancher account'
+              - 'Rancher Prime Registry — Harvester account'
+              - 'Rancher Prime Staging Registry — Rancher account'
+              - 'Rancher Prime Staging Registry — Harvester account'
           ui:widget: checkboxes
 
     - title: Additional Information
@@ -255,20 +255,6 @@ spec:
 
           ### Justification
           ${{ parameters.justification }}
-
-          ---
-
-          ## Progress
-
-          - [ ] Pull request created
-          - [ ] EIO team review
-          - [ ] Pull request merged
-          - [ ] Flux sync
-          - [ ] Resources provisioned
-
-          ---
-
-          _This issue will be automatically updated as your request progresses._
         labels:
           - backstage-request
           - github
