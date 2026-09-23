@@ -137,59 +137,29 @@ spec:
     - title: Secrets
       description: Optional. Skip this if the repository doesn't need credentials.
       properties:
-        registry:
-          title: Registry Account
-          type: string
-          description: Harvester repositories use their own prime registry credentials.
-          enum: [rancher, harvester]
-          enumNames: ['Rancher', 'Harvester']
-          default: rancher
-          ui:widget: radio
-
-      dependencies:
-        registry:
-          oneOf:
-            - properties:
-                registry:
-                  enum: [rancher]
-                secrets:
-                  title: Secrets
-                  description: Need one that isn't listed? Open an issue with EIO.
-                  type: array
-                  default: []
-                  uniqueItems: true
-                  items:
-                    type: string
-                    enum:
-                      - 'dockerhub/rancher:import-dockerhub-rancher'
-                      - 'rancher-prime-registry:import-rancher-suse-registry'
-                      - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
-                    enumNames:
-                      - 'DockerHub Registry'
-                      - 'Rancher Prime Registry'
-                      - 'Rancher Prime Staging Registry'
-                  ui:widget: checkboxes
-
-            - properties:
-                registry:
-                  enum: [harvester]
-                secrets:
-                  title: Secrets
-                  description: Need one that isn't listed? Open an issue with EIO.
-                  type: array
-                  default: []
-                  uniqueItems: true
-                  items:
-                    type: string
-                    enum:
-                      - 'dockerhub/rancher:import-dockerhub-rancher'
-                      - 'rancher-prime-registry:import-rancher-prime-harvester'
-                      - 'rancher-prime-stg-registry:import-harvester-suse-registry-stg'
-                    enumNames:
-                      - 'DockerHub Registry'
-                      - 'Rancher Prime Registry'
-                      - 'Rancher Prime Staging Registry'
-                  ui:widget: checkboxes
+        secrets:
+          title: Secrets
+          description: >-
+            Pick the entries that match your org. Harvester repositories use the
+            Harvester credentials. Need one that isn't listed? Open an issue with EIO.
+          type: array
+          default: []
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - 'dockerhub/rancher:import-dockerhub-rancher'
+              - 'rancher-prime-registry:import-rancher-suse-registry'
+              - 'rancher-prime-stg-registry:import-rancher-prime-registry-stg'
+              - 'rancher-prime-registry:import-rancher-prime-harvester'
+              - 'rancher-prime-stg-registry:import-harvester-suse-registry-stg'
+            enumNames:
+              - 'DockerHub Registry'
+              - 'Rancher Prime Registry'
+              - 'Rancher Prime Staging Registry'
+              - 'Rancher Prime Registry (Harvester only)'
+              - 'Rancher Prime Staging Registry (Harvester only)'
+          ui:widget: checkboxes
 
     - title: Additional Information
       properties:
