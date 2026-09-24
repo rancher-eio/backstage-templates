@@ -5,6 +5,7 @@ nav:
   - Home: index.md
   - Services: services.md
   - Vault secrets: vault-secrets.md
+  - How self-service works: how-it-works.md
 
 plugins:
   - techdocs-core
