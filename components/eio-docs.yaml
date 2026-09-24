@@ -4,7 +4,7 @@ kind: Component
 metadata:
   name: eio-docs
   title: EIO
-  description: Self-service requests, and how they work.
+  description: EIO services, and how to get access to them.
   annotations:
     backstage.io/techdocs-ref: dir:.
     github.com/project-slug: rancher-eio/backstage-catalog
