@@ -44,31 +44,38 @@ The external cluster runs its own copies of these, separate from the ones above.
 
 ## Public
 
-These are on the internet with no sign in, because Rancher installs everywhere
-call them. They run on the external cluster.
+These are on the internet with no sign in, because installs everywhere call
+them. They run on the external cluster.
+
+Use the `rancher.systems` address. The `rancher.io` ones next to it are aliases
+on the same ingress, same certificate, same backend, kept because released
+products already call them. Point anything new at `rancher.systems`.
 
 ### Channel servers
 
 They tell an install which release channel points at which version.
 
-| Service | Address | What it is |
-| --- | --- | --- |
-| Rancher | [update.rancher.io](https://update.rancher.io) | Release channels for Rancher. |
-| RKE2 | [update.rke2.io](https://update.rke2.io) | Release channels for RKE2. |
-| K3s | [update.k3s.io](https://update.k3s.io) | Release channels for K3s. |
+| Service | Address | Also answers on | What it is |
+| --- | --- | --- | --- |
+| Rancher | [rancher.channels.rancher.systems](https://rancher.channels.rancher.systems) | `update.rancher.io` | Release channels for Rancher. |
+| RKE2 | [rke2.channels.rancher.systems](https://rke2.channels.rancher.systems) | `update.rke2.io` | Release channels for RKE2. |
+| K3s | [k3s.channels.rancher.systems](https://k3s.channels.rancher.systems) | `update.k3s.io` | Release channels for K3s. |
 
 ### Upgrade responders
 
 An install checks in anonymously, and gets told the latest version available.
 
-| Service | Address | What it is |
-| --- | --- | --- |
-| Rancher Desktop | [desktop.version.rancher.io](https://desktop.version.rancher.io) | Version checks from Rancher Desktop. |
-| Epinio | [epinio.version.rancher.io](https://epinio.version.rancher.io) | Version checks from Epinio. |
-| Harvester | [harvester-upgrade-responder.rancher.io](https://harvester-upgrade-responder.rancher.io) | Version checks from Harvester. |
-| Longhorn | [longhorn-upgrade-responder.rancher.io](https://longhorn-upgrade-responder.rancher.io) | Version checks from Longhorn. |
-| NeuVector | [upgrades.neuvector-upgrade-responder.livestock.rancher.io](https://upgrades.neuvector-upgrade-responder.livestock.rancher.io) | Version checks from NeuVector. |
-| RKE2 security | [security-responder.version.rke2.io](https://security-responder.version.rke2.io) | Security advisories for RKE2. |
+They serve `/v1/checkupgrade` and nothing else, so the bare address below will
+not load in a browser.
+
+| Service | Address | Also answers on | What it is |
+| --- | --- | --- | --- |
+| Rancher Desktop | `desktop.version.rancher.systems` | `desktop.version.rancher.io` | Version checks from Rancher Desktop. |
+| Epinio | `epinio.version.rancher.systems` | `epinio.version.rancher.io` | Version checks from Epinio. |
+| Harvester | `harvester.version.rancher.systems` | `harvester-upgrade-responder.rancher.io` | Version checks from Harvester. |
+| Longhorn | `longhorn.version.rancher.systems` | `longhorn-upgrade-responder.rancher.io` | Version checks from Longhorn. |
+| NeuVector | `neuvector.version.rancher.systems` | `upgrades.neuvector-upgrade-responder.livestock.rancher.io` | Version checks from NeuVector. |
+| RKE2 security | `rke2-security.version.rancher.systems` | `security-responder.version.rke2.io` | Security advisories for RKE2. |
 
 ## Missing something?
 
