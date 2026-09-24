@@ -1,0 +1,15 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: eio-docs
+  title: EIO
+  description: EIO services, and how to get access to them.
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    github.com/project-slug: rancher-eio/backstage-catalog
+spec:
+  type: documentation
+  lifecycle: production
+  owner: group:eio
+  system: secrets-management

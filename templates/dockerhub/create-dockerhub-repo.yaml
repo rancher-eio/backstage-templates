@@ -82,7 +82,7 @@ spec:
 
           ### Repositories
           {% for repo in parameters.repositories %}
-          - [ ] `${{ repo.namespace }}/${{ repo.name }}` — ${{ repo.visibility or 'private' }}
+          - [ ] `${{ repo.namespace }}/${{ repo.name }}` (${{ repo.visibility or 'private' }})
           {%- endfor %}
 
           ### Justification

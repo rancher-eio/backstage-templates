@@ -3,10 +3,14 @@ apiVersion: eio.rancher.engineering/v1alpha1
 kind: RepositoryRequest
 metadata:
   name: ${{ values.resourceName }}
-  {%- if values.issueNumber %}
+  {%- if values.requestedBy or values.issueNumber %}
   annotations:
-    github.eio.rancher.engineering/issue-number: "${{ values.issueNumber }}"
+    {%- if values.requestedBy %}
     github.eio.rancher.engineering/requested-by: "${{ values.requestedBy }}"
+    {%- endif %}
+    {%- if values.issueNumber %}
+    github.eio.rancher.engineering/issue-number: "${{ values.issueNumber }}"
+    {%- endif %}
   {%- endif %}
 spec:
   org: ${{ values.org }}

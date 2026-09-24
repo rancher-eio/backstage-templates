@@ -139,9 +139,7 @@ spec:
       properties:
         secrets:
           title: Secrets
-          description: >-
-            Pick the account that matches your organization. Need one that isn't
-            listed? Open an issue with EIO.
+          description: Need one that isn't listed? Open an issue with EIO.
           type: array
           default: []
           uniqueItems: true
@@ -155,10 +153,10 @@ spec:
               - 'rancher-prime-stg-registry:import-harvester-suse-registry-stg'
             enumNames:
               - 'DockerHub Registry'
-              - 'Rancher Prime Registry — Rancher account'
-              - 'Rancher Prime Registry — Harvester account'
-              - 'Rancher Prime Staging Registry — Rancher account'
-              - 'Rancher Prime Staging Registry — Harvester account'
+              - 'Rancher Prime Registry'
+              - 'Harvester Rancher Prime Registry'
+              - 'Rancher Prime Staging Registry'
+              - 'Harvester Rancher Prime Staging Registry'
           ui:widget: checkboxes
 
     - title: Additional Information
@@ -203,6 +201,24 @@ spec:
 
           ### Justification
           ${{ parameters.justification }}
+          {%- if parameters.secrets and parameters.secrets.length > 0 %}
+
+          ---
+
+          ### Reading these secrets
+
+          Once the pull request is merged, follow the guide for each one:
+          {% for secret in parameters.secrets %}
+          {%- set vaultPath = secret.split(':')[0] %}
+          {%- if vaultPath == 'dockerhub/rancher' %}
+          - [Docker Hub](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#docker-hub)
+          {%- elif vaultPath == 'rancher-prime-registry' %}
+          - [Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-registry)
+          {%- elif vaultPath == 'rancher-prime-stg-registry' %}
+          - [Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-staging-registry)
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
         labels:
           - backstage-request
           - github

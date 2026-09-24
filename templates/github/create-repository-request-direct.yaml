@@ -180,9 +180,7 @@ spec:
       properties:
         secrets:
           title: Secrets
-          description: >-
-            Pick the account that matches your organization. Need one that isn't
-            listed? Open an issue with EIO.
+          description: Need one that isn't listed? Open an issue with EIO.
           type: array
           default: []
           uniqueItems: true
@@ -196,10 +194,10 @@ spec:
               - 'rancher-prime-stg-registry:import-harvester-suse-registry-stg'
             enumNames:
               - 'DockerHub Registry'
-              - 'Rancher Prime Registry — Rancher account'
-              - 'Rancher Prime Registry — Harvester account'
-              - 'Rancher Prime Staging Registry — Rancher account'
-              - 'Rancher Prime Staging Registry — Harvester account'
+              - 'Rancher Prime Registry'
+              - 'Harvester Rancher Prime Registry'
+              - 'Rancher Prime Staging Registry'
+              - 'Harvester Rancher Prime Staging Registry'
           ui:widget: checkboxes
 
     - title: Additional Information
@@ -212,6 +210,57 @@ spec:
             rows: 3
 
   steps:
+    - id: template-manifest
+      name: Preparing RepositoryRequest manifest
+      action: fetch:template
+      input:
+        url: ./content
+        targetPath: ./manifests/resources/RepositoryRequest
+        values:
+          name: ${{ parameters.name }}
+          org: ${{ parameters.org }}
+          resourceName: ${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}
+          create: ${{ parameters.create }}
+          visibility: ${{ parameters.visibility or 'private' }}
+          description: ${{ parameters.description or '' }}
+          teams: ${{ parameters.teams }}
+          collaborators: ${{ parameters.collaborators }}
+          protectedBranches: ${{ parameters.protectedBranches }}
+          secrets: ${{ parameters.secrets }}
+          rulesetName: ${{ parameters.rulesetName or 'main' }}
+          enforcement: ${{ parameters.enforcement or 'active' }}
+          requiredApprovals: ${{ parameters.requiredApprovals or 0 }}
+          requireSignatures: ${{ parameters.requireSignatures or false }}
+          requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+
+    - id: create-pr
+      name: Submitting PR for review
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=org&owner=${{ parameters.org }}
+        branchName: repository-request/${{ parameters.name }}
+        title: 'Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
+        description: |
+          ## Create Repository Request
+
+          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+
+          ### Summary
+          - **Organization:** `${{ parameters.org }}`
+          - **Repository:** `${{ parameters.name }}`
+          - **Create:** ${{ parameters.create }}
+          - **Visibility:** ${{ parameters.visibility or 'private' }}
+          - **Teams:** ${{ parameters.teams.length or 0 }}
+          - **Collaborators:** ${{ parameters.collaborators.length or 0 }}
+          - **Secrets:** ${{ parameters.secrets.length or 0 }}
+          - **Protected branches:** ${{ parameters.protectedBranches | join(', ') or 'none' }}
+          - **Enforcement:** ${{ parameters.enforcement or 'active' }}
+          - **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
+          - **Require signatures:** ${{ parameters.requireSignatures or false }}
+
+          ### Justification
+          ${{ parameters.justification }}
+
     - id: create-issue
       name: Creating issue for tracking
       action: github:issues:create
@@ -221,6 +270,7 @@ spec:
         body: |
           ## Create Repository Request
 
+          **Pull request:** ${{ steps['create-pr'].output.remoteUrl }}
           **Repository:** `${{ parameters.org }}/${{ parameters.name }}`
           **Organization:** ${{ parameters.org }}
           **New repository:** ${{ parameters.create and 'yes' or 'no, adopting an existing one' }}
@@ -244,7 +294,7 @@ spec:
           ### Docker Hub
           {%- if parameters.dockerhub and parameters.dockerhub.length > 0 %}
           {% for repo in parameters.dockerhub %}
-          - [ ] `${{ repo.namespace }}/${{ repo.name }}` — ${{ repo.visibility or 'private' }}
+          - [ ] `${{ repo.namespace }}/${{ repo.name }}` (${{ repo.visibility or 'private' }})
           {%- endfor %}
           {%- else %}
           _none_
@@ -255,6 +305,24 @@ spec:
 
           ### Justification
           ${{ parameters.justification }}
+          {%- if parameters.secrets and parameters.secrets.length > 0 %}
+
+          ---
+
+          ### Reading these secrets
+
+          Once the pull request is merged, follow the guide for each one:
+          {% for secret in parameters.secrets %}
+          {%- set vaultPath = secret.split(':')[0] %}
+          {%- if vaultPath == 'dockerhub/rancher' %}
+          - [Docker Hub](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#docker-hub)
+          {%- elif vaultPath == 'rancher-prime-registry' %}
+          - [Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-registry)
+          {%- elif vaultPath == 'rancher-prime-stg-registry' %}
+          - [Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-staging-registry)
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
         labels:
           - backstage-request
           - github
@@ -269,59 +337,6 @@ spec:
         number: ${{ steps['create-issue'].output.issueNumber }}
         labels:
           - needs-dockerhub
-
-    - id: template-manifest
-      name: Preparing RepositoryRequest manifest
-      action: fetch:template
-      input:
-        url: ./content
-        targetPath: ./manifests/resources/RepositoryRequest
-        values:
-          name: ${{ parameters.name }}
-          org: ${{ parameters.org }}
-          resourceName: ${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}
-          create: ${{ parameters.create }}
-          visibility: ${{ parameters.visibility or 'private' }}
-          description: ${{ parameters.description or '' }}
-          teams: ${{ parameters.teams }}
-          collaborators: ${{ parameters.collaborators }}
-          protectedBranches: ${{ parameters.protectedBranches }}
-          secrets: ${{ parameters.secrets }}
-          rulesetName: ${{ parameters.rulesetName or 'main' }}
-          enforcement: ${{ parameters.enforcement or 'active' }}
-          requiredApprovals: ${{ parameters.requiredApprovals or 0 }}
-          requireSignatures: ${{ parameters.requireSignatures or false }}
-          issueNumber: ${{ steps['create-issue'].output.issueNumber }}
-          requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
-
-    - id: create-pr
-      name: Submitting PR for review
-      action: publish:github:pull-request
-      input:
-        repoUrl: github.com?repo=org&owner=${{ parameters.org }}
-        branchName: repository-request/${{ parameters.name }}
-        title: 'Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
-        description: |
-          ## Create Repository Request
-
-          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
-          **Tracking issue:** https://github.com/rancherlabs/eio/issues/${{ steps['create-issue'].output.issueNumber }}
-
-          ### Summary
-          - **Organization:** `${{ parameters.org }}`
-          - **Repository:** `${{ parameters.name }}`
-          - **Create:** ${{ parameters.create }}
-          - **Visibility:** ${{ parameters.visibility or 'private' }}
-          - **Teams:** ${{ parameters.teams.length or 0 }}
-          - **Collaborators:** ${{ parameters.collaborators.length or 0 }}
-          - **Secrets:** ${{ parameters.secrets.length or 0 }}
-          - **Protected branches:** ${{ parameters.protectedBranches | join(', ') or 'none' }}
-          - **Enforcement:** ${{ parameters.enforcement or 'active' }}
-          - **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
-          - **Require signatures:** ${{ parameters.requireSignatures or false }}
-
-          ### Justification
-          ${{ parameters.justification }}
 
     - id: request-vault-role
       name: Requesting Vault role for secrets access
