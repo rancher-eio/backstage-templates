@@ -11,3 +11,4 @@ spec:
     - ./templates/github/*.yaml
     - ./templates/dockerhub/*.yaml
     - ./templates/secrets/*.yaml
+    - https://github.com/rancher-eio/internal-production/blob/main/catalog-info.yaml

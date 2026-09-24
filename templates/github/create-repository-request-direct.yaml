@@ -315,11 +315,11 @@ spec:
           {% for secret in parameters.secrets %}
           {%- set vaultPath = secret.split(':')[0] %}
           {%- if vaultPath == 'dockerhub/rancher' %}
-          - [Docker Hub](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#docker-hub)
+          - [Docker Hub](https://backstage.rancher.engineering/docs/default/component/internal-production/vault-secrets/#docker-hub)
           {%- elif vaultPath == 'rancher-prime-registry' %}
-          - [Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-registry)
+          - [Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/component/internal-production/vault-secrets/#rancher-prime-registry)
           {%- elif vaultPath == 'rancher-prime-stg-registry' %}
-          - [Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-staging-registry)
+          - [Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/component/internal-production/vault-secrets/#rancher-prime-staging-registry)
           {%- endif %}
           {%- endfor %}
           {%- endif %}

@@ -3,9 +3,7 @@ site_description: EIO services, and how to get access to them.
 
 nav:
   - Home: index.md
-  - Services: services.md
   - Repositories: self-service-repositories.md
-  - Vault secrets: vault-secrets.md
 
 plugins:
   - techdocs-core
