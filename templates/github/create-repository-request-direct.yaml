@@ -261,13 +261,16 @@ spec:
 
           Once the pull request is merged, follow the guide for each one:
           {% for secret in parameters.secrets %}
-          {%- set vaultPath = secret.split(':')[0] %}
-          {%- if vaultPath == 'dockerhub/rancher' %}
+          {%- if secret == 'dockerhub/rancher:import-dockerhub-rancher' %}
           - [Docker Hub](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#docker-hub)
-          {%- elif vaultPath == 'rancher-prime-registry' %}
+          {%- elif secret == 'rancher-prime-registry:import-rancher-suse-registry' %}
           - [Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#rancher-prime-registry)
-          {%- elif vaultPath == 'rancher-prime-stg-registry' %}
+          {%- elif secret == 'rancher-prime-registry:import-rancher-prime-harvester' %}
+          - [Harvester Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#harvester-rancher-prime-registry)
+          {%- elif secret == 'rancher-prime-stg-registry:import-rancher-prime-registry-stg' %}
           - [Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#rancher-prime-staging-registry)
+          {%- elif secret == 'rancher-prime-stg-registry:import-harvester-suse-registry-stg' %}
+          - [Harvester Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#harvester-rancher-prime-staging-registry)
           {%- endif %}
           {%- endfor %}
           {%- endif %}

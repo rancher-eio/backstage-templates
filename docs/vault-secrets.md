@@ -41,15 +41,21 @@ secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credenti
 secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials password | PRIME_REGISTRY_PASSWORD
 ```
 
-Two different registry accounts are published to this path: a Rancher one and a
-Harvester one. Your repository is granted exactly one of them, never both.
+This account cannot push `/harvester/` images. If yours does, ask for
+[Harvester Rancher Prime Registry](#harvester-rancher-prime-registry) instead.
 
-They matter because their push scope differs. The Rancher account cannot push
-into `/harvester/` images, and a repository wired to the wrong one fails with
-`insufficient_scope` at push time rather than at read time. The read lines above
-are the same either way, so the failure does not show up until you push.
+## Harvester Rancher Prime Registry
 
-If your repository publishes Harvester images, say so when you request access.
+```
+secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials registry | PRIME_REGISTRY ;
+secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials username | PRIME_REGISTRY_USERNAME ;
+secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials password | PRIME_REGISTRY_PASSWORD
+```
+
+Same path as
+[Rancher Prime Registry](#rancher-prime-registry), a different account behind
+it. This one can push `/harvester/` images. A repository granted the wrong one
+reads fine and fails with `insufficient_scope` at push time.
 
 ## Rancher Prime Staging Registry
 
@@ -59,7 +65,21 @@ secret/data/github/repo/${{ github.repository }}/rancher-prime-stg-registry/cred
 secret/data/github/repo/${{ github.repository }}/rancher-prime-stg-registry/credentials password | STAGING_REGISTRY_PASSWORD
 ```
 
-The same Rancher and Harvester split applies here. See the note above.
+This account cannot push `/harvester/` images. If yours does, ask for
+[Harvester Rancher Prime Staging Registry](#harvester-rancher-prime-staging-registry)
+instead.
+
+## Harvester Rancher Prime Staging Registry
+
+```
+secret/data/github/repo/${{ github.repository }}/rancher-prime-stg-registry/credentials registry | STAGING_REGISTRY ;
+secret/data/github/repo/${{ github.repository }}/rancher-prime-stg-registry/credentials username | STAGING_REGISTRY_USERNAME ;
+secret/data/github/repo/${{ github.repository }}/rancher-prime-stg-registry/credentials password | STAGING_REGISTRY_PASSWORD
+```
+
+Same path as
+[Rancher Prime Staging Registry](#rancher-prime-staging-registry), a different
+account behind it. This one can push `/harvester/` images.
 
 ## Requesting access
 
