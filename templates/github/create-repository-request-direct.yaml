@@ -210,57 +210,6 @@ spec:
             rows: 3
 
   steps:
-    - id: template-manifest
-      name: Preparing RepositoryRequest manifest
-      action: fetch:template
-      input:
-        url: ./content
-        targetPath: ./manifests/resources/RepositoryRequest
-        values:
-          name: ${{ parameters.name }}
-          org: ${{ parameters.org }}
-          resourceName: ${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}
-          create: ${{ parameters.create }}
-          visibility: ${{ parameters.visibility or 'private' }}
-          description: ${{ parameters.description or '' }}
-          teams: ${{ parameters.teams }}
-          collaborators: ${{ parameters.collaborators }}
-          protectedBranches: ${{ parameters.protectedBranches }}
-          secrets: ${{ parameters.secrets }}
-          rulesetName: ${{ parameters.rulesetName or 'main' }}
-          enforcement: ${{ parameters.enforcement or 'active' }}
-          requiredApprovals: ${{ parameters.requiredApprovals or 0 }}
-          requireSignatures: ${{ parameters.requireSignatures or false }}
-          requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
-
-    - id: create-pr
-      name: Submitting PR for review
-      action: publish:github:pull-request
-      input:
-        repoUrl: github.com?repo=org&owner=${{ parameters.org }}
-        branchName: repository-request/${{ parameters.name }}
-        title: 'Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
-        description: |
-          ## Create Repository Request
-
-          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
-
-          ### Summary
-          - **Organization:** `${{ parameters.org }}`
-          - **Repository:** `${{ parameters.name }}`
-          - **Create:** ${{ parameters.create }}
-          - **Visibility:** ${{ parameters.visibility or 'private' }}
-          - **Teams:** ${{ parameters.teams.length or 0 }}
-          - **Collaborators:** ${{ parameters.collaborators.length or 0 }}
-          - **Secrets:** ${{ parameters.secrets.length or 0 }}
-          - **Protected branches:** ${{ parameters.protectedBranches | join(', ') or 'none' }}
-          - **Enforcement:** ${{ parameters.enforcement or 'active' }}
-          - **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
-          - **Require signatures:** ${{ parameters.requireSignatures or false }}
-
-          ### Justification
-          ${{ parameters.justification }}
-
     - id: create-issue
       name: Creating issue for tracking
       action: github:issues:create
@@ -270,7 +219,6 @@ spec:
         body: |
           ## Create Repository Request
 
-          **Pull request:** ${{ steps['create-pr'].output.remoteUrl }}
           **Repository:** `${{ parameters.org }}/${{ parameters.name }}`
           **Organization:** ${{ parameters.org }}
           **New repository:** ${{ parameters.create and 'yes' or 'no, adopting an existing one' }}
@@ -315,11 +263,11 @@ spec:
           {% for secret in parameters.secrets %}
           {%- set vaultPath = secret.split(':')[0] %}
           {%- if vaultPath == 'dockerhub/rancher' %}
-          - [Docker Hub](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#docker-hub)
+          - [Docker Hub](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#docker-hub)
           {%- elif vaultPath == 'rancher-prime-registry' %}
-          - [Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-registry)
+          - [Rancher Prime Registry](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#rancher-prime-registry)
           {%- elif vaultPath == 'rancher-prime-stg-registry' %}
-          - [Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/component/eio-docs/vault-secrets/#rancher-prime-staging-registry)
+          - [Rancher Prime Staging Registry](https://backstage.rancher.engineering/docs/default/system/eio/vault-secrets/#rancher-prime-staging-registry)
           {%- endif %}
           {%- endfor %}
           {%- endif %}
@@ -327,6 +275,72 @@ spec:
           - backstage-request
           - github
           - resolution-automated
+
+    - id: template-manifest
+      name: Preparing RepositoryRequest manifest
+      action: fetch:template
+      input:
+        url: ./content
+        targetPath: ./manifests/resources/RepositoryRequest
+        values:
+          name: ${{ parameters.name }}
+          org: ${{ parameters.org }}
+          resourceName: ${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}
+          create: ${{ parameters.create }}
+          visibility: ${{ parameters.visibility or 'private' }}
+          description: ${{ parameters.description or '' }}
+          teams: ${{ parameters.teams }}
+          collaborators: ${{ parameters.collaborators }}
+          protectedBranches: ${{ parameters.protectedBranches }}
+          secrets: ${{ parameters.secrets }}
+          rulesetName: ${{ parameters.rulesetName or 'main' }}
+          enforcement: ${{ parameters.enforcement or 'active' }}
+          requiredApprovals: ${{ parameters.requiredApprovals or 0 }}
+          requireSignatures: ${{ parameters.requireSignatures or false }}
+          requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+          issueNumber: ${{ steps['create-issue'].output.issueNumber }}
+
+    - id: create-pr
+      name: Submitting PR for review
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=org&owner=${{ parameters.org }}
+        branchName: repository-request/${{ parameters.name }}
+        title: 'Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
+        description: |
+          ## Create Repository Request
+
+          **Tracking issue:** rancherlabs/eio#${{ steps['create-issue'].output.issueNumber }}
+
+          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+
+          ### Summary
+          - **Organization:** `${{ parameters.org }}`
+          - **Repository:** `${{ parameters.name }}`
+          - **Create:** ${{ parameters.create }}
+          - **Visibility:** ${{ parameters.visibility or 'private' }}
+          - **Teams:** ${{ parameters.teams.length or 0 }}
+          - **Collaborators:** ${{ parameters.collaborators.length or 0 }}
+          - **Secrets:** ${{ parameters.secrets.length or 0 }}
+          - **Protected branches:** ${{ parameters.protectedBranches | join(', ') or 'none' }}
+          - **Enforcement:** ${{ parameters.enforcement or 'active' }}
+          - **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
+          - **Require signatures:** ${{ parameters.requireSignatures or false }}
+
+          ### Justification
+          ${{ parameters.justification }}
+
+    - id: link-pr
+      name: Linking the pull request to the issue
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=internal-production&owner=rancher-eio
+        workflowId: link-pr-to-issue.yaml
+        branchOrTagName: main
+        workflowInputs:
+          tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
+          prUrl: ${{ steps['create-pr'].output.remoteUrl }}
+          summary: Creates the RepositoryRequest manifest for `${{ parameters.org }}/${{ parameters.name }}`.
 
     - id: label-dockerhub
       name: Adding label for Docker Hub repo creation
