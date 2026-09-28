@@ -30,8 +30,8 @@ installs out in the world.
 
 | Service | Address | What it is |
 | --- | --- | --- |
-| pgAdmin (Comitiva) | [comitiva.pgadmin.rancher.engineering](https://comitiva.pgadmin.rancher.engineering) | Postgres console for Comitiva. |
-| pgAdmin (Observability) | [metrics.pgadmin.rancher.engineering](https://metrics.pgadmin.rancher.engineering) | Postgres console for the observability stack. |
+| pgAdmin (Comitiva) | [comitiva.pgadmin.rancher.engineering](https://comitiva.pgadmin.rancher.engineering) | Postgres console for Comitiva. See [pgAdmin](pgadmin.md). |
+| pgAdmin (Observability) | [metrics.pgadmin.rancher.engineering](https://metrics.pgadmin.rancher.engineering) | Postgres console for the observability stack. See [pgAdmin](pgadmin.md). |
 
 ### External cluster
 
