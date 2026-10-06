@@ -1,0 +1,256 @@
+---
+name: merge-repository-request
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: URL of the RepositoryRequest pull request Backstage opened
+        required: true
+        type: string
+      path:
+        description: Path of the RepositoryRequest manifest in that pull request
+        required: true
+        type: string
+      tracking:
+        description: 'Requester and tracking issue, as username:issueNumber'
+        required: false
+        type: string
+
+concurrency:
+  group: merge-repository-request-${{ inputs.pr }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  YAMLFMT_VERSION: 0.21.0
+  MERGE: |
+    load(strenv(OLD)) as $old |
+    load(strenv(NEW)) as $new |
+    ($old.spec.teams // []) as $ot | ($new.spec.teams // []) as $nt |
+    ($old.spec.collaborators // []) as $oc | ($new.spec.collaborators // []) as $nc |
+    ($old.spec.secrets // []) as $os | ($new.spec.secrets // []) as $ns |
+    ($old.spec.branchProtection.branches // []) as $ob | ($new.spec.branchProtection.branches // []) as $nb |
+    $old * ($new | del(.spec.teams) | del(.spec.collaborators) | del(.spec.secrets) | del(.spec.branchProtection.branches))
+    | .spec.teams = (($ot | map(. as $o | ($nt | map(select(.slug == $o.slug)) | .[0]) // $o)) + ($nt | map(. as $n | select($ot | map(select(.slug == $n.slug)) | length == 0))))
+    | .spec.collaborators = (($oc | map(. as $o | ($nc | map(select(.username == $o.username)) | .[0]) // $o)) + ($nc | map(. as $n | select($oc | map(select(.username == $n.username)) | length == 0))))
+    | .spec.secrets = (($os | map(. as $o | ($ns | map(select(.vaultPath == $o.vaultPath)) | .[0]) // $o)) + ($ns | map(. as $n | select($os | map(select(.vaultPath == $n.vaultPath)) | length == 0))))
+    | .spec.branchProtection.branches = ($ob + ($nb | map(. as $b | select($ob | map(select(. == $b)) | length == 0))))
+    | del(.spec.teams | select(length == 0 and ($old.spec | has("teams") | not)))
+    | del(.spec.collaborators | select(length == 0 and ($old.spec | has("collaborators") | not)))
+    | del(.spec.secrets | select(length == 0 and ($old.spec | has("secrets") | not)))
+    | del(.spec.branchProtection.branches | select(length == 0 and (($old.spec.branchProtection // {}) | has("branches") | not)))
+    | del(.spec.branchProtection | select(length == 0 and ($old.spec | has("branchProtection") | not)))
+
+jobs:
+  main:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Validate inputs
+        id: inputs
+        env:
+          PR: ${{ inputs.pr }}
+          MANIFEST: ${{ inputs.path }}
+          TRACKING: ${{ inputs.tracking }}
+        run: |
+          case "${PR}" in
+            https://github.com/*/org/pull/*) ;;
+            *) echo "[FATAL] invalid pr" >&2; exit 1 ;;
+          esac
+
+          OWNER="${PR#https://github.com/}"
+          OWNER="${OWNER%%/*}"
+          NUMBER="${PR##*/}"
+
+          case "${OWNER}" in
+            harvester|neuvector|rancher|rancher-eio|rancher-sandbox|rancherlabs) ;;
+            *) echo "[FATAL] invalid org" >&2; exit 1 ;;
+          esac
+
+          case "${NUMBER}" in
+            ''|*[!0-9]*) echo "[FATAL] invalid pull request number" >&2; exit 1 ;;
+          esac
+
+          case "${MANIFEST}" in
+            manifests/resources/RepositoryRequest/*.yaml) ;;
+            *) echo "[FATAL] invalid path" >&2; exit 1 ;;
+          esac
+
+          case "${MANIFEST#manifests/resources/RepositoryRequest/}" in
+            .*|*/*|*[!A-Za-z0-9._-]*) echo "[FATAL] invalid path" >&2; exit 1 ;;
+          esac
+
+          case "${TRACKING}" in
+            "") ;;
+            *[!A-Za-z0-9:_-]*) echo "[FATAL] invalid tracking input" >&2; exit 1 ;;
+          esac
+
+          echo "owner=${OWNER}" >> "${GITHUB_OUTPUT}"
+          echo "number=${NUMBER}" >> "${GITHUB_OUTPUT}"
+          case "${TRACKING}" in
+            *:*) echo "issue=${TRACKING##*:}" >> "${GITHUB_OUTPUT}" ;;
+            *)   echo "issue="                >> "${GITHUB_OUTPUT}" ;;
+          esac
+
+      - name: Read GitHub App credentials
+        uses: rancher-eio/read-vault-secrets@0da85151ad1f19ed7986c41587e45aac1ace74b6 # v3
+        with:
+          secrets: |
+            secret/data/github/repo/rancher-eio/backstage-catalog/github/app-credentials appId | APPID ;
+            secret/data/github/repo/rancher-eio/backstage-catalog/github/app-credentials privateKey | PRIVATEKEY
+
+      - name: Generate token
+        id: token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ env.APPID }}
+          private-key: ${{ env.PRIVATEKEY }}
+          owner: ${{ steps.inputs.outputs.owner }}
+          repositories: org
+
+      - name: Generate token for the tracking issue
+        id: eio-token
+        if: ${{ steps.inputs.outputs.issue != '' }}
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ env.APPID }}
+          private-key: ${{ env.PRIVATEKEY }}
+          owner: rancherlabs
+          repositories: eio
+
+      - name: Install yamlfmt
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://github.com/google/yamlfmt/releases/download/v${YAMLFMT_VERSION}/yamlfmt_${YAMLFMT_VERSION}_Linux_x86_64.tar.gz" \
+            | sudo tar --extract --gzip --directory=/usr/local/bin yamlfmt
+
+          printf 'formatter:\n  include_document_start: true\n  indentless_arrays: true\n' > "${RUNNER_TEMP}/yamlfmt.yaml"
+
+      - name: Read the request and what the repository had before
+        id: read
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          OWNER: ${{ steps.inputs.outputs.owner }}
+          NUMBER: ${{ steps.inputs.outputs.number }}
+          MANIFEST: ${{ inputs.path }}
+        run: |
+          REPO="${OWNER}/org"
+
+          gh pr view "${NUMBER}" --repo "${REPO}" --json state,headRefName,headRefOid,baseRefName,isDraft > pr.json
+          if [ "$(jq -r .state pr.json)" != "OPEN" ]; then
+            echo "[FATAL] ${REPO}#${NUMBER} is not open" >&2
+            exit 1
+          fi
+
+          HEAD="$(jq -r .headRefOid pr.json)"
+          export HEAD
+
+          gh api graphql -F owner="${OWNER}" -F number="${NUMBER}" -f query='
+            query($owner: String!, $number: Int!) {
+              repository(owner: $owner, name: "org") {
+                pullRequest(number: $number) {
+                  timelineItems(last: 100, itemTypes: [HEAD_REF_FORCE_PUSHED_EVENT]) {
+                    nodes {
+                      ... on HeadRefForcePushedEvent {
+                        beforeCommit { oid }
+                        afterCommit { oid }
+                      }
+                    }
+                  }
+                }
+              }
+            }' > force-pushes.json
+
+          if [ "$(jq '[.data.repository.pullRequest.timelineItems.nodes[] | select(.afterCommit.oid == env.HEAD)] | length' force-pushes.json)" != "0" ]; then
+            BEFORE="$(jq -r '[.data.repository.pullRequest.timelineItems.nodes[] | select(.afterCommit.oid == env.HEAD)] | last | .beforeCommit.oid // empty' force-pushes.json)"
+            if [ -z "${BEFORE}" ]; then
+              echo "[FATAL] Backstage replaced the pull request, but GitHub no longer has the commit it replaced" >&2
+              exit 1
+            fi
+            OLD_REF="${BEFORE}"
+          else
+            OLD_REF="$(jq -r .baseRefName pr.json)"
+          fi
+
+          fetch() {
+            gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${MANIFEST}?ref=$1" > "$2" 2> fetch.err && return 0
+            if grep -q "HTTP 404" fetch.err; then
+              rm -f "$2"
+              return 0
+            fi
+            cat fetch.err >&2
+            return 1
+          }
+
+          fetch "${HEAD}" new.yaml
+          if [ ! -f new.yaml ]; then
+            echo "[FATAL] ${MANIFEST} is not in ${REPO}#${NUMBER}" >&2
+            exit 1
+          fi
+
+          fetch "${OLD_REF}" old.yaml
+
+          echo "Merging into the request from ${OLD_REF}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "branch=$(jq -r .headRefName pr.json)" >> "${GITHUB_OUTPUT}"
+          echo "head=${HEAD}" >> "${GITHUB_OUTPUT}"
+          echo "draft=$(jq -r .isDraft pr.json)" >> "${GITHUB_OUTPUT}"
+
+      - name: Merge
+        run: |
+          if [ -f old.yaml ]; then
+            OLD=old.yaml NEW=new.yaml yq --null-input "${MERGE}" > merged.yaml
+          else
+            yq '.spec.repository.create = (.spec.repository.create // false)' new.yaml > merged.yaml
+          fi
+
+          yamlfmt -conf "${RUNNER_TEMP}/yamlfmt.yaml" merged.yaml
+
+      - name: Push the merged request
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          OWNER: ${{ steps.inputs.outputs.owner }}
+          MANIFEST: ${{ inputs.path }}
+          BRANCH: ${{ steps.read.outputs.branch }}
+          HEAD: ${{ steps.read.outputs.head }}
+        run: |
+          if cmp --silent new.yaml merged.yaml; then
+            echo "Nothing to merge" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          BLOB="$(gh api "repos/${OWNER}/org/contents/${MANIFEST}?ref=${HEAD}" --jq .sha)"
+
+          gh api --method PUT "repos/${OWNER}/org/contents/${MANIFEST}" \
+            -f message=":robot: keeps what the repository already had" \
+            -f content="$(base64 --wrap=0 merged.yaml)" \
+            -f sha="${BLOB}" \
+            -f branch="${BRANCH}" \
+            > /dev/null
+
+          {
+            echo '```diff'
+            diff -u new.yaml merged.yaml || true
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Mark the pull request ready for review
+        if: ${{ steps.read.outputs.draft == 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          OWNER: ${{ steps.inputs.outputs.owner }}
+          NUMBER: ${{ steps.inputs.outputs.number }}
+        run: gh pr ready "${NUMBER}" --repo "${OWNER}/org"
+
+      - name: Report the failure on the tracking issue
+        if: ${{ failure() && steps.eio-token.outputs.token != '' }}
+        env:
+          GH_TOKEN: ${{ steps.eio-token.outputs.token }}
+          ISSUE: ${{ steps.inputs.outputs.issue }}
+          PR: ${{ inputs.pr }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue comment "${ISSUE}" \
+            --repo rancherlabs/eio \
+            --body "🔴 Could not merge this request with what the repository already has, so ${PR} stays a draft. Details: ${RUN_URL}"
