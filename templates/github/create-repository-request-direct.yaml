@@ -337,7 +337,7 @@ spec:
           ${{ parameters.justification or '_none_' }}
 
     - id: merge-request
-      name: Merging with the existing request
+      name: Submitting PR for review
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=backstage-catalog&owner=rancher-eio
