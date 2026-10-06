@@ -86,7 +86,7 @@ spec:
           {%- endfor %}
 
           ### Justification
-          ${{ parameters.justification }}
+          ${{ parameters.justification or '_none_' }}
 
           ---
 

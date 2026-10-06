@@ -16,6 +16,10 @@ spec:
 
   parameters:
     - title: Repository Details
+      description: >-
+        Need a brand-new repository? Tick "Create a new repository" below.
+        Leave it unticked if the repository already exists.
+        Anything you leave empty keeps its current value.
       required:
         - org
         - name
@@ -36,12 +40,12 @@ spec:
           ui:help: Lowercase letters, numbers, dots, hyphens and underscores only
 
         create:
-          title: Create the repository
+          title: Create a new repository
           type: boolean
-          default: true
           description: >-
-            Untick if the repository already exists and you only want to manage
-            its access and branch protection.
+            Tick this if the repository does not exist yet. Leave it unticked
+            if it already exists and you only want to manage its access,
+            secrets or branch protection.
 
       dependencies:
         create:
@@ -54,7 +58,7 @@ spec:
                   type: string
                   description: Who can see this repository?
                   enum: [private, public, internal]
-                  default: private
+                  ui:help: Required when you tick "Create a new repository". If the repository already exists, pick its current visibility to keep it.
                 description:
                   title: Description
                   type: string
@@ -124,26 +128,23 @@ spec:
                 rulesetName:
                   title: Ruleset Name
                   type: string
-                  default: main
-                  description: Name for the ruleset in GitHub
+                  description: Name for the ruleset in GitHub. Leave empty for main, or to keep the current name.
                 enforcement:
                   title: Enforcement Mode
                   type: string
                   enum: [active, evaluate, disabled]
-                  default: active
-                  description: 'active: enforce rules, evaluate: dry-run only, disabled: off'
+                  description: 'active: enforce rules, evaluate: dry-run only, disabled: off. Leave empty for active, or to keep the current mode.'
                 requiredApprovals:
                   title: Required Approvals
                   type: integer
-                  default: 0
                   minimum: 0
                   maximum: 10
-                  description: Approvals needed before a pull request can be merged
+                  description: Approvals needed before a pull request can be merged. Leave empty for 0, or to keep the current number.
                 requireSignatures:
                   title: Require Commit Signatures
                   type: boolean
-                  default: false
-                  description: Require commits to be signed (GPG/SSH)
+                  ui:widget: radio
+                  description: Require commits to be signed (GPG/SSH). Leave empty for no, or to keep the current setting.
 
             - properties:
                 protectedBranches:
@@ -226,18 +227,18 @@ spec:
           **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
           ### Description
-          ${{ parameters.description }}
+          ${{ parameters.description or '_none_' }}
 
           ### Requested Access
-          **Teams:** `${{ parameters.teams | dump }}`
-          **Collaborators:** `${{ parameters.collaborators | dump }}`
+          **Teams:** ${{ (parameters.teams and parameters.teams.length > 0) and ('`' + (parameters.teams | dump) + '`') or '_none_' }}
+          **Collaborators:** ${{ (parameters.collaborators and parameters.collaborators.length > 0) and ('`' + (parameters.collaborators | dump) + '`') or '_none_' }}
 
           ### Branch Protection
           **Branches:** ${{ parameters.protectedBranches | join(', ') or '_none_' }}
-          **Ruleset name:** ${{ parameters.rulesetName or 'main' }}
-          **Enforcement:** ${{ parameters.enforcement or 'active' }}
-          **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
-          **Require signatures:** ${{ parameters.requireSignatures or false }}
+          **Ruleset name:** ${{ parameters.rulesetName or '_unchanged_' }}
+          **Enforcement:** ${{ parameters.enforcement or '_unchanged_' }}
+          **Required approvals:** ${{ parameters.requiredApprovals if parameters.requiredApprovals is defined else '_unchanged_' }}
+          **Require signatures:** ${{ parameters.requireSignatures if parameters.requireSignatures is defined else '_unchanged_' }}
 
           ### Docker Hub
           {%- if parameters.dockerhub and parameters.dockerhub.length > 0 %}
@@ -252,7 +253,7 @@ spec:
           ${{ parameters.secrets | join(', ') or '_none_' }}
 
           ### Justification
-          ${{ parameters.justification }}
+          ${{ parameters.justification or '_none_' }}
           {%- if parameters.secrets and parameters.secrets.length > 0 %}
 
           ---
@@ -290,16 +291,16 @@ spec:
           org: ${{ parameters.org }}
           resourceName: ${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}
           create: ${{ parameters.create }}
-          visibility: ${{ parameters.visibility or 'private' }}
-          description: ${{ parameters.description or '' }}
+          visibility: ${{ parameters.visibility }}
+          description: ${{ parameters.description }}
           teams: ${{ parameters.teams }}
           collaborators: ${{ parameters.collaborators }}
           protectedBranches: ${{ parameters.protectedBranches }}
           secrets: ${{ parameters.secrets }}
-          rulesetName: ${{ parameters.rulesetName or 'main' }}
-          enforcement: ${{ parameters.enforcement or 'active' }}
-          requiredApprovals: ${{ parameters.requiredApprovals or 0 }}
-          requireSignatures: ${{ parameters.requireSignatures or false }}
+          rulesetName: ${{ parameters.rulesetName }}
+          enforcement: ${{ parameters.enforcement }}
+          requiredApprovals: ${{ parameters.requiredApprovals }}
+          requireSignatures: ${{ parameters.requireSignatures }}
           requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
           issueNumber: ${{ steps['create-issue'].output.issueNumber }}
 
@@ -308,8 +309,10 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?repo=org&owner=${{ parameters.org }}
-        branchName: repository-request/${{ parameters.name }}
-        title: 'Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
+        branchName: RepositoryRequest/${{ parameters.name }}
+        update: true
+        draft: true
+        title: ':robot: Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
         description: |
           ## Create Repository Request
 
@@ -320,21 +323,34 @@ spec:
           ### Summary
           - **Organization:** `${{ parameters.org }}`
           - **Repository:** `${{ parameters.name }}`
-          - **Create:** ${{ parameters.create }}
-          - **Visibility:** ${{ parameters.visibility or 'private' }}
+          - **Create:** ${{ parameters.create and 'yes' or 'not requested' }}
+          - **Visibility:** ${{ parameters.visibility or 'unchanged' }}
           - **Teams:** ${{ parameters.teams.length or 0 }}
           - **Collaborators:** ${{ parameters.collaborators.length or 0 }}
           - **Secrets:** ${{ parameters.secrets.length or 0 }}
           - **Protected branches:** ${{ parameters.protectedBranches | join(', ') or 'none' }}
-          - **Enforcement:** ${{ parameters.enforcement or 'active' }}
-          - **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
-          - **Require signatures:** ${{ parameters.requireSignatures or false }}
+          - **Enforcement:** ${{ parameters.enforcement or 'unchanged' }}
+          - **Required approvals:** ${{ parameters.requiredApprovals if parameters.requiredApprovals is defined else 'unchanged' }}
+          - **Require signatures:** ${{ parameters.requireSignatures if parameters.requireSignatures is defined else 'unchanged' }}
 
           ### Justification
-          ${{ parameters.justification }}
+          ${{ parameters.justification or '_none_' }}
+
+    - id: merge-request
+      name: Merging with the existing request
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=backstage-catalog&owner=rancher-eio
+        workflowId: merge-repository-request.yaml
+        branchOrTagName: main
+        returnWorkflowRunDetails: true
+        workflowInputs:
+          pr: ${{ steps['create-pr'].output.remoteUrl }}
+          path: manifests/resources/RepositoryRequest/${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}.yaml
+          tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
     - id: link-pr
-      name: Linking the pull request to the issue
+      name: Submitting PR for review
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=internal-production&owner=rancher-eio
@@ -357,6 +373,7 @@ spec:
 
     - id: request-vault-role
       name: Requesting Vault role for secrets access
+      if: ${{ parameters.secrets and parameters.secrets.length > 0 }}
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=internal-production&owner=rancher-eio

@@ -186,21 +186,21 @@ spec:
           **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
           ### Description
-          ${{ parameters.description }}
+          ${{ parameters.description or '_none_' }}
 
           ### Requested Access
-          **Teams:** `${{ parameters.teams | dump }}`
-          **Collaborators:** `${{ parameters.collaborators | dump }}`
+          **Teams:** ${{ (parameters.teams and parameters.teams.length > 0) and ('`' + (parameters.teams | dump) + '`') or '_none_' }}
+          **Collaborators:** ${{ (parameters.collaborators and parameters.collaborators.length > 0) and ('`' + (parameters.collaborators | dump) + '`') or '_none_' }}
 
           ### Branch Protection
           **Branches:** ${{ parameters.protectedBranches | join(', ') or '_none_' }}
-          **Required approvals:** ${{ parameters.requiredApprovals }}
+          **Required approvals:** ${{ parameters.requiredApprovals or 0 }}
 
           ### Secrets
           ${{ parameters.secrets | join(', ') or '_none_' }}
 
           ### Justification
-          ${{ parameters.justification }}
+          ${{ parameters.justification or '_none_' }}
           {%- if parameters.secrets and parameters.secrets.length > 0 %}
 
           ---

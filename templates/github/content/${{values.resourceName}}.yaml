@@ -15,22 +15,24 @@ metadata:
 spec:
   org: ${{ values.org }}
   repoName: ${{ values.name }}
+  {%- if values.create or values.visibility or values.description %}
   repository:
-    create: ${{ values.create }}
+    {%- if values.create %}
+    create: true
+    {%- endif %}
+    {%- if values.visibility %}
     visibility: ${{ values.visibility }}
+    {%- endif %}
     {%- if values.description %}
     description: "${{ values.description }}"
-    {%- else %}
-    description: ""
     {%- endif %}
+  {%- endif %}
   {%- if values.teams and values.teams.length > 0 %}
   teams:
   {%- for team in values.teams %}
   - slug: ${{ team.slug }}
     permission: ${{ team.permission }}
   {%- endfor %}
-  {%- else %}
-  teams: []
   {%- endif %}
   {%- if values.collaborators and values.collaborators.length > 0 %}
   collaborators:
@@ -38,29 +40,34 @@ spec:
   - username: ${{ collaborator.username }}
     permission: ${{ collaborator.permission }}
   {%- endfor %}
-  {%- else %}
-  collaborators: []
   {%- endif %}
+  {%- set hasBranches = values.protectedBranches and values.protectedBranches.length > 0 %}
+  {%- set hasApprovals = values.requiredApprovals is defined and values.requiredApprovals !== null and values.requiredApprovals !== "" %}
+  {%- set hasSignatures = values.requireSignatures is defined and values.requireSignatures !== null and values.requireSignatures !== "" %}
+  {%- if hasBranches or values.rulesetName or values.enforcement or hasApprovals or hasSignatures %}
   branchProtection:
-    {%- if values.protectedBranches and values.protectedBranches.length > 0 %}
+    {%- if hasBranches %}
     enabled: true
+    {%- endif %}
     {%- if values.rulesetName %}
     name: ${{ values.rulesetName }}
     {%- endif %}
+    {%- if hasBranches %}
     branches:
     {%- for branch in values.protectedBranches %}
     - ${{ branch }}
     {%- endfor %}
+    {%- endif %}
     {%- if values.enforcement %}
     enforcement: ${{ values.enforcement }}
     {%- endif %}
+    {%- if hasApprovals %}
     requiredApprovals: ${{ values.requiredApprovals }}
-    {%- if values.requireSignatures %}
+    {%- endif %}
+    {%- if hasSignatures %}
     requireSignatures: ${{ values.requireSignatures }}
     {%- endif %}
-    {%- else %}
-    enabled: false
-    {%- endif %}
+  {%- endif %}
   {%- if values.secrets and values.secrets.length > 0 %}
   secrets:
   {%- for secret in values.secrets %}
@@ -68,6 +75,4 @@ spec:
   - vaultPath: ${{ parts[0] }}
     source: ${{ parts[1] }}
   {%- endfor %}
-  {%- else %}
-  secrets: []
   {%- endif %}
