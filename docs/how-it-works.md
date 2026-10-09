@@ -37,8 +37,8 @@ A template is a form plus a list of steps.
 | Template | What it does |
 | --- | --- |
 | [Request secret access](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/secrets/request-secret-access.yaml) | Gives an existing repository access to a shared secret. |
-| [Create a repository (direct)](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/github/create-repository-request-direct.yaml) | Creates a repository, with a pull request straight to internal-production. |
-| [Create a repository](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/github/create-repository-request.yaml) | The same, but handed to that organization's own `org` repository, so organization management stays in one place. |
+| [Create a repository](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/github/create-repository-request-direct.yaml) | Creates a repository, with a pull request straight to internal-production. |
+| [Add new members to a GitHub team](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/github/add-team-members/template.yaml) | Adds people to a team, with a pull request to that organization's `org` repository. |
 | [Create a Docker Hub repository](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/dockerhub/create-dockerhub-repo.yaml) | Opens an issue for EIO. Nothing to generate for this one. |
 
 All of them open the tracking issue first, then write the YAML and submit the

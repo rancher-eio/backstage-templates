@@ -3,7 +3,7 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: create-repository-request-direct
-  title: Create a GitHub Repository (Direct)
+  title: Create a GitHub Repository
   description: Set up a repository with the right team access. Creates PR directly to internal-production.
   tags:
     - github
@@ -289,7 +289,7 @@ spec:
         values:
           name: ${{ parameters.name }}
           org: ${{ parameters.org }}
-          resourceName: ${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}
+          resourceName: ${{ ((parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name) | lower | replace('_', '-') }}
           create: ${{ parameters.create }}
           visibility: ${{ parameters.visibility }}
           description: ${{ parameters.description }}
@@ -346,7 +346,7 @@ spec:
         returnWorkflowRunDetails: true
         workflowInputs:
           pr: ${{ steps['create-pr'].output.remoteUrl }}
-          path: manifests/resources/RepositoryRequest/${{ (parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name }}.yaml
+          path: manifests/resources/RepositoryRequest/${{ ((parameters.org == 'rancher') and (parameters.org + '--' + parameters.name) or parameters.name) | lower | replace('_', '-') }}.yaml
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
     - id: link-pr

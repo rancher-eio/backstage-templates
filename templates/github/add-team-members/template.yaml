@@ -1,0 +1,162 @@
+---
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: add-team-members
+  title: Add New Members to a GitHub Team
+  description: Add people to a GitHub team so they get the team's repository access.
+  tags:
+    - github
+    - team
+    - self-service
+spec:
+  owner: group:eio
+  type: service
+  system: github-management
+
+  parameters:
+    - title: Team Members
+      description: Everyone must already be a member of the org.
+      required:
+        - org
+        - team
+        - usernames
+      properties:
+        org:
+          title: GitHub Organization
+          type: string
+          enum: [rancherlabs, rancher, rancher-eio, harvester, neuvector, rancher-sandbox]
+          default: rancher
+          ui:autofocus: true
+
+        team:
+          title: Team
+          type: string
+          pattern: '^[a-z0-9][a-z0-9-]*$'
+          ui:help: 'Team slug, e.g. eio'
+
+        usernames:
+          title: GitHub Usernames
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9-]*$'
+
+        role:
+          title: Role
+          type: string
+          enum: [member, maintainer]
+          default: member
+          description: 'member: has the team''s access. maintainer: can also manage the team''s members. Applies to everyone above.'
+
+    - title: Additional Information
+      properties:
+        justification:
+          title: Why do these people need to join the team?
+          type: string
+          ui:widget: textarea
+          ui:options:
+            rows: 3
+
+  steps:
+    - id: create-issue
+      name: Creating issue for tracking
+      action: github:issues:create
+      input:
+        repoUrl: github.com?repo=eio&owner=rancherlabs
+        title: 'Add Team Members Request: ${{ parameters.org }}/${{ parameters.team }}'
+        body: |
+          ## Add Team Members Request
+
+          **Team:** `${{ parameters.org }}/${{ parameters.team }}`
+          **Role:** ${{ parameters.role or 'member' }}
+          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+
+          ### Members
+          {%- for username in parameters.usernames %}
+          - `${{ username }}`
+          {%- endfor %}
+
+          ### Justification
+          ${{ parameters.justification or '_none_' }}
+        labels:
+          - backstage-request
+          - github
+          - resolution-automated
+
+    - id: template-manifest
+      name: Preparing TeamMembership manifests
+      each: ${{ parameters.usernames }}
+      action: fetch:template
+      input:
+        url: ./content
+        targetPath: ./manifests/resources/TeamMembership
+        values:
+          org: ${{ parameters.org }}
+          team: ${{ parameters.team }}
+          username: ${{ each.value }}
+          role: ${{ parameters.role or 'member' }}
+          resourceName: ${{ ((parameters.org == 'rancher') and ('rancher--' + parameters.team + '--' + each.value) or (parameters.team + '--' + each.value)) | lower }}
+          requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+          issueNumber: ${{ steps['create-issue'].output.issueNumber }}
+
+    - id: create-pr
+      name: Submitting PR for review
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=org&owner=${{ parameters.org }}
+        branchName: TeamMembership/${{ parameters.team }}-${{ steps['create-issue'].output.issueNumber }}
+        update: true
+        title: ':robot: Add Team Members: ${{ parameters.org }}/${{ parameters.team }}'
+        description: |
+          ## Add Team Members Request
+
+          **Tracking issue:** rancherlabs/eio#${{ steps['create-issue'].output.issueNumber }}
+
+          **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
+
+          ### Summary
+          - **Organization:** `${{ parameters.org }}`
+          - **Team:** `${{ parameters.team }}`
+          - **Role:** ${{ parameters.role or 'member' }}
+          - **Members:** ${{ parameters.usernames | join(', ') }}
+
+          ### Justification
+          ${{ parameters.justification or '_none_' }}
+
+    - id: link-pr
+      name: Linking PR to the tracking issue
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=internal-production&owner=rancher-eio
+        workflowId: link-pr-to-issue.yaml
+        branchOrTagName: main
+        workflowInputs:
+          tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
+          prUrl: ${{ steps['create-pr'].output.remoteUrl }}
+          summary: Adds ${{ parameters.usernames | join(', ') }} to `${{ parameters.org }}/${{ parameters.team }}` as ${{ parameters.role or 'member' }}.
+
+  output:
+    text:
+      - title: Team Members Request Submitted!
+        content: |
+          ✅ **Request Created**
+
+          Your request to add ${{ parameters.usernames | join(', ') }} to `${{ parameters.org }}/${{ parameters.team }}` is being processed.
+
+          **Next steps:**
+          1. EIO team review (1-3 days)
+          2. Memberships applied (~5 min after merge)
+
+          All updates will be posted to the tracking issue.
+
+    links:
+      - title: View Pull Request
+        icon: github
+        url: ${{ steps['create-pr'].output.remoteUrl }}
+
+      - title: Track Request
+        icon: github
+        url: ${{ steps['create-issue'].output.issueUrl }}

@@ -8,6 +8,7 @@ spec:
   targets:
     - ./components/*.yaml
     - ./systems/*.yaml
-    - ./templates/github/*.yaml
+    - ./templates/github/create-repository-request-direct.yaml
+    - ./templates/github/add-team-members/template.yaml
     - ./templates/dockerhub/*.yaml
     - ./templates/secrets/*.yaml
