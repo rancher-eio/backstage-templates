@@ -33,15 +33,19 @@ env:
     ($old.spec.collaborators // []) as $oc | ($new.spec.collaborators // []) as $nc |
     ($old.spec.secrets // []) as $os | ($new.spec.secrets // []) as $ns |
     ($old.spec.branchProtection.branches // []) as $ob | ($new.spec.branchProtection.branches // []) as $nb |
-    $old * ($new | del(.spec.teams) | del(.spec.collaborators) | del(.spec.secrets) | del(.spec.branchProtection.branches))
+    ($old.spec.rulesets // []) as $or | ($new.spec.rulesets // []) as $nr |
+    $old * ($new | del(.spec.teams) | del(.spec.collaborators) | del(.spec.secrets) | del(.spec.branchProtection.branches) | del(.spec.rulesets))
+    | .metadata.name = $old.metadata.name
     | .spec.teams = (($ot | map(. as $o | ($nt | map(select(.slug == $o.slug)) | .[0]) // $o)) + ($nt | map(. as $n | select($ot | map(select(.slug == $n.slug)) | length == 0))))
     | .spec.collaborators = (($oc | map(. as $o | ($nc | map(select(.username == $o.username)) | .[0]) // $o)) + ($nc | map(. as $n | select($oc | map(select(.username == $n.username)) | length == 0))))
     | .spec.secrets = (($os | map(. as $o | ($ns | map(select(.vaultPath == $o.vaultPath)) | .[0]) // $o)) + ($ns | map(. as $n | select($os | map(select(.vaultPath == $n.vaultPath)) | length == 0))))
     | .spec.branchProtection.branches = ($ob + ($nb | map(. as $b | select($ob | map(select(. == $b)) | length == 0))))
+    | .spec.rulesets = (($or | map(. as $o | ($nr | map(select(.name == $o.name)) | .[0]) as $n | $o * ($n // {}) | .branches = (($o.branches // []) + (($n.branches // []) | map(. as $b | select(($o.branches // []) | map(select(. == $b)) | length == 0)))) | del(.branches | select(length == 0 and ($o | has("branches") | not))))) + ($nr | map(. as $n | select($or | map(select(.name == $n.name)) | length == 0))))
     | del(.spec.teams | select(length == 0 and ($old.spec | has("teams") | not)))
     | del(.spec.collaborators | select(length == 0 and ($old.spec | has("collaborators") | not)))
     | del(.spec.secrets | select(length == 0 and ($old.spec | has("secrets") | not)))
     | del(.spec.branchProtection.branches | select(length == 0 and (($old.spec.branchProtection // {}) | has("branches") | not)))
+    | del(.spec.rulesets | select(length == 0 and ($old.spec | has("rulesets") | not)))
     | del(.spec.branchProtection | select(length == 0 and ($old.spec | has("branchProtection") | not)))
 
 jobs:

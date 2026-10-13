@@ -119,6 +119,43 @@ spec:
             type: string
           ui:help: 'Branch names, without refs/heads/. e.g. main'
 
+        rulesets:
+          title: Additional Rulesets
+          description: Extra rulesets on top of the one above. Each name must be unique and different from the ruleset name above. Existing rulesets are kept. Using the name of an existing one adds branches to it and updates only the fields you fill in.
+          type: array
+          default: []
+          items:
+            type: object
+            required: [name, branches]
+            properties:
+              name:
+                title: Ruleset Name
+                type: string
+                pattern: '^[A-Za-z0-9][A-Za-z0-9._ -]*$'
+              branches:
+                title: Branches
+                type: array
+                minItems: 1
+                items:
+                  type: string
+                ui:help: 'Branch names, without refs/heads/. e.g. release/v2.10'
+              enforcement:
+                title: Enforcement Mode
+                type: string
+                enum: [active, evaluate, disabled]
+                description: Leave empty for active, or to keep the current mode.
+              requiredApprovals:
+                title: Required Approvals
+                type: integer
+                minimum: 0
+                maximum: 10
+                description: Leave empty for 0, or to keep the current number.
+              requireSignatures:
+                title: Require Commit Signatures
+                type: boolean
+                ui:widget: radio
+                description: Leave empty for no, or to keep the current setting.
+
       dependencies:
         protectedBranches:
           oneOf:
@@ -240,6 +277,15 @@ spec:
           **Required approvals:** ${{ parameters.requiredApprovals if parameters.requiredApprovals is defined else '_unchanged_' }}
           **Require signatures:** ${{ parameters.requireSignatures if parameters.requireSignatures is defined else '_unchanged_' }}
 
+          ### Additional Rulesets
+          {%- if parameters.rulesets and parameters.rulesets.length > 0 %}
+          {% for ruleset in parameters.rulesets %}
+          - `${{ ruleset.name }}`: ${{ ruleset.branches | join(', ') }} (enforcement ${{ ruleset.enforcement or '_unchanged_' }}, approvals ${{ ruleset.requiredApprovals if ruleset.requiredApprovals is defined else '_unchanged_' }}, signatures ${{ ruleset.requireSignatures if ruleset.requireSignatures is defined else '_unchanged_' }})
+          {%- endfor %}
+          {%- else %}
+          _none_
+          {%- endif %}
+
           ### Docker Hub
           {%- if parameters.dockerhub and parameters.dockerhub.length > 0 %}
           {% for repo in parameters.dockerhub %}
@@ -301,6 +347,7 @@ spec:
           enforcement: ${{ parameters.enforcement }}
           requiredApprovals: ${{ parameters.requiredApprovals }}
           requireSignatures: ${{ parameters.requireSignatures }}
+          rulesets: ${{ parameters.rulesets }}
           requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
           issueNumber: ${{ steps['create-issue'].output.issueNumber }}
 
@@ -332,6 +379,7 @@ spec:
           - **Enforcement:** ${{ parameters.enforcement or 'unchanged' }}
           - **Required approvals:** ${{ parameters.requiredApprovals if parameters.requiredApprovals is defined else 'unchanged' }}
           - **Require signatures:** ${{ parameters.requireSignatures if parameters.requireSignatures is defined else 'unchanged' }}
+          - **Additional rulesets:** ${{ parameters.rulesets.length or 0 }}
 
           ### Justification
           ${{ parameters.justification or '_none_' }}

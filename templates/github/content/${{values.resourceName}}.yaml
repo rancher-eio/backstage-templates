@@ -68,6 +68,25 @@ spec:
     requireSignatures: ${{ values.requireSignatures }}
     {%- endif %}
   {%- endif %}
+  {%- if values.rulesets and values.rulesets.length > 0 %}
+  rulesets:
+  {%- for ruleset in values.rulesets %}
+  - name: "${{ ruleset.name }}"
+    branches:
+    {%- for branch in ruleset.branches %}
+    - ${{ branch }}
+    {%- endfor %}
+    {%- if ruleset.enforcement %}
+    enforcement: ${{ ruleset.enforcement }}
+    {%- endif %}
+    {%- if ruleset.requiredApprovals is defined and ruleset.requiredApprovals !== null and ruleset.requiredApprovals !== "" %}
+    requiredApprovals: ${{ ruleset.requiredApprovals }}
+    {%- endif %}
+    {%- if ruleset.requireSignatures is defined and ruleset.requireSignatures !== null and ruleset.requireSignatures !== "" %}
+    requireSignatures: ${{ ruleset.requireSignatures }}
+    {%- endif %}
+  {%- endfor %}
+  {%- endif %}
   {%- if values.secrets and values.secrets.length > 0 %}
   secrets:
   {%- for secret in values.secrets %}
