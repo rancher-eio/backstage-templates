@@ -121,7 +121,7 @@ spec:
 
         rulesets:
           title: Additional Rulesets
-          description: Extra rulesets on top of the one above. Each name must be unique and different from the ruleset name above. Existing rulesets are kept. Using the name of an existing one adds branches to it and updates only the fields you fill in.
+          description: Add more rulesets, each with its own name.
           type: array
           default: []
           items:
@@ -385,10 +385,10 @@ spec:
           ${{ parameters.justification or '_none_' }}
 
     - id: merge-request
-      name: Submitting PR for review
+      name: Keeping existing repository settings
       action: github:actions:dispatch
       input:
-        repoUrl: github.com?repo=backstage-catalog&owner=rancher-eio
+        repoUrl: github.com?repo=backstage-templates&owner=rancher-eio
         workflowId: merge-repository-request.yaml
         branchOrTagName: main
         returnWorkflowRunDetails: true
@@ -398,7 +398,7 @@ spec:
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
     - id: link-pr
-      name: Submitting PR for review
+      name: Linking PR to tracking issue
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=internal-production&owner=rancher-eio

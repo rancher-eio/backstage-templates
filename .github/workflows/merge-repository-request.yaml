@@ -37,7 +37,7 @@ env:
     $old * ($new | del(.spec.teams) | del(.spec.collaborators) | del(.spec.secrets) | del(.spec.branchProtection.branches) | del(.spec.rulesets))
     | .metadata.name = $old.metadata.name
     | .spec.teams = (($ot | map(. as $o | ($nt | map(select(.slug == $o.slug)) | .[0]) // $o)) + ($nt | map(. as $n | select($ot | map(select(.slug == $n.slug)) | length == 0))))
-    | .spec.collaborators = (($oc | map(. as $o | ($nc | map(select(.username == $o.username)) | .[0]) // $o)) + ($nc | map(. as $n | select($oc | map(select(.username == $n.username)) | length == 0))))
+    | .spec.collaborators = (($oc | map(. as $o | ($nc | map(select((.username | downcase) == ($o.username | downcase))) | .[0] | select(. != null) | .username = $o.username) // $o)) + ($nc | map(. as $n | select($oc | map(select((.username | downcase) == ($n.username | downcase))) | length == 0))))
     | .spec.secrets = (($os | map(. as $o | ($ns | map(select(.vaultPath == $o.vaultPath)) | .[0]) // $o)) + ($ns | map(. as $n | select($os | map(select(.vaultPath == $n.vaultPath)) | length == 0))))
     | .spec.branchProtection.branches = ($ob + ($nb | map(. as $b | select($ob | map(select(. == $b)) | length == 0))))
     | .spec.rulesets = (($or | map(. as $o | ($nr | map(select(.name == $o.name)) | .[0]) as $n | $o * ($n // {}) | .branches = (($o.branches // []) + (($n.branches // []) | map(. as $b | select(($o.branches // []) | map(select(. == $b)) | length == 0)))) | del(.branches | select(length == 0 and ($o | has("branches") | not))))) + ($nr | map(. as $n | select($or | map(select(.name == $n.name)) | length == 0))))
@@ -102,8 +102,8 @@ jobs:
         uses: rancher-eio/read-vault-secrets@0da85151ad1f19ed7986c41587e45aac1ace74b6 # v3
         with:
           secrets: |
-            secret/data/github/repo/rancher-eio/backstage-catalog/github/app-credentials appId | APPID ;
-            secret/data/github/repo/rancher-eio/backstage-catalog/github/app-credentials privateKey | PRIVATEKEY
+            secret/data/github/repo/rancher-eio/backstage-templates/github/app-credentials appId | APPID ;
+            secret/data/github/repo/rancher-eio/backstage-templates/github/app-credentials privateKey | PRIVATEKEY
 
       - name: Generate token
         id: token
