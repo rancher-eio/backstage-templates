@@ -3,8 +3,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: create-repository-request-direct
-  title: Create a GitHub Repository
-  description: Set up a repository with the right team access. Creates PR directly to internal-production.
+  title: GitHub Repository
+  description: Create a repository or update an existing one's access, branch protection and secrets.
   tags:
     - github
     - repository

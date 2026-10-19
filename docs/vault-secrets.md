@@ -84,7 +84,7 @@ account behind it. This one can push `/harvester/` images.
 ## Requesting access
 
 Use the
-[Request Secret Access](https://backstage.rancher.engineering/create/templates/default/request-secret-access)
+[Secret Access](https://backstage.rancher.engineering/create/templates/default/request-secret-access)
 template for a repository that already exists, or pick the secrets on the
 Secrets page when you create a new repository.
 

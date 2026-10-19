@@ -3,7 +3,7 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: add-team-members
-  title: Add New Members to a GitHub Team
+  title: GitHub Team Members
   description: Add people to a GitHub team so they get the team's repository access.
   tags:
     - github

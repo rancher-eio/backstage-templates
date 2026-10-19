@@ -3,7 +3,7 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: create-dockerhub-repo
-  title: Create a Docker Hub Repository
+  title: Docker Hub Repositories
   description: Request one or more Docker Hub repositories.
   tags:
     - dockerhub

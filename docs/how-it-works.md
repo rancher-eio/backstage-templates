@@ -37,7 +37,7 @@ A template is a form plus a list of steps.
 | Template | What it does |
 | --- | --- |
 | [Request secret access](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/secrets/request-secret-access.yaml) | Gives an existing repository access to a shared secret. |
-| [Create a repository](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/github/create-repository-request-direct.yaml) | Creates a repository, with a pull request straight to internal-production. |
+| [GitHub Repository](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/github/create-repository-request-direct.yaml) | Creates a repository or updates an existing one, with a pull request straight to internal-production. |
 | [Add new members to a GitHub team](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/github/add-team-members/template.yaml) | Adds people to a team, with a pull request to that organization's `org` repository. |
 | [Create a Docker Hub repository](https://github.com/rancher-eio/backstage-catalog/blob/main/templates/dockerhub/create-dockerhub-repo.yaml) | Opens an issue for EIO. Nothing to generate for this one. |
 
@@ -77,3 +77,24 @@ annotations:
 `eio-k8s-github-notifier`, which reads the issue number off it and comments
 there. Without this last step a request would have to be checked against the
 cluster by hand.
+
+## Changing a collaborator's permission
+
+Adding or removing a collaborator, and changing a team's permission, all apply
+on their own once the pull request merges. Changing the permission of someone
+who is already a collaborator does not. The GitHub provider refuses to change it
+in place, and the collaborator shows `Synced: False` with:
+
+```
+cannot change the value of the argument "permission" from "push" to "admin"
+```
+
+Merge the change as usual so the YAML records the new permission, then set it on
+GitHub yourself. You need an org owner's token for this:
+
+```sh
+gh api -X PUT repos/<org>/<repo>/collaborators/<username> -f permission=<permission>
+```
+
+Once GitHub matches the YAML, the error clears within a few minutes. They are
+already a collaborator, so no new invite is sent.
