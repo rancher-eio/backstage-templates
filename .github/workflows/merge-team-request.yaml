@@ -154,8 +154,16 @@ jobs:
 
           gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${MANIFEST}?ref=${HEAD}" > new.yaml
 
+          if ! gh api "repos/${REPO}/contents/manifests/resources/Team?ref=${BASE}" > teams.json 2> fetch.err; then
+            if ! grep -q "HTTP 404" fetch.err; then
+              cat fetch.err >&2
+              exit 1
+            fi
+            echo '[]' > teams.json
+          fi
+
           OLD_PATH=""
-          for FILE in $(gh api "repos/${REPO}/contents/manifests/resources/Team?ref=${BASE}" --jq '.[] | select(.type == "file" and (.name | test("\\.ya?ml$"))) | .path' 2> /dev/null); do
+          for FILE in $(jq -r '.[] | select(.type == "file" and (.name | test("\\.ya?ml$"))) | .path' teams.json); do
             gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${FILE}?ref=${BASE}" > candidate.yaml
             if [ "$(TEAM="${TEAM}" OWNER="${OWNER}" yq 'select(.kind == "Team" and .spec.forProvider.name == strenv(TEAM) and .spec.providerConfigRef.name == strenv(OWNER)) | "match"' candidate.yaml)" = "match" ]; then
               OLD_PATH="${FILE}"
@@ -236,4 +244,4 @@ jobs:
         run: |
           gh issue comment "${ISSUE}" \
             --repo rancherlabs/eio \
-            --body "🔴 Could not edit this team, so ${PR} stays a draft. If the team isn't in the org repo yet, EIO needs to adopt it first. Details: ${RUN_URL}"
+            --body "🔴 Could not merge this request with what the team already has, so ${PR} stays a draft. If you're editing a team that isn't in the org repo yet, EIO needs to adopt it first. Details: ${RUN_URL}"
