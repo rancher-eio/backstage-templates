@@ -16,10 +16,7 @@ spec:
 
   parameters:
     - title: Repository Details
-      description: >-
-        Need a brand-new repository? Tick "Create a new repository" below.
-        Leave it unticked if the repository already exists.
-        Anything you leave empty keeps its current value.
+      description: Empty fields keep their current value.
       required:
         - org
         - name
@@ -27,7 +24,6 @@ spec:
         org:
           title: GitHub Organization
           type: string
-          description: Which org should this repo be created in?
           enum: [rancherlabs, rancher, rancher-eio, harvester, neuvector, rancher-sandbox]
           default: rancherlabs
           ui:autofocus: true
@@ -35,17 +31,13 @@ spec:
         name:
           title: Repository Name
           type: string
-          description: Name of the repository (without org prefix)
           pattern: '^[a-z0-9][a-z0-9._-]*$'
-          ui:help: Lowercase letters, numbers, dots, hyphens and underscores only
+          ui:help: Lowercase letters, numbers, dots, hyphens and underscores
 
         create:
           title: Create a new repository
           type: boolean
-          description: >-
-            Tick this if the repository does not exist yet. Leave it unticked
-            if it already exists and you only want to manage its access,
-            secrets or branch protection.
+          description: Leave unticked for an existing repository.
 
       dependencies:
         create:
@@ -56,9 +48,7 @@ spec:
                 visibility:
                   title: Visibility
                   type: string
-                  description: Who can see this repository?
                   enum: [private, public, internal]
-                  ui:help: Required when you tick "Create a new repository". If the repository already exists, pick its current visibility to keep it.
                 description:
                   title: Description
                   type: string
@@ -109,7 +99,7 @@ spec:
                 default: pull
 
     - title: Branch Protection
-      description: Full control over GitHub branch protection rulesets. Leave empty to use your org's default.
+      description: Leave empty to use your org's default.
       properties:
         protectedBranches:
           title: Protected Branches
@@ -121,7 +111,6 @@ spec:
 
         rulesets:
           title: Additional Rulesets
-          description: Add more rulesets, each with its own name.
           type: array
           default: []
           items:
@@ -143,18 +132,18 @@ spec:
                 title: Enforcement Mode
                 type: string
                 enum: [active, evaluate, disabled]
-                description: Leave empty for active, or to keep the current mode.
+                description: 'Default: active'
               requiredApprovals:
                 title: Required Approvals
                 type: integer
                 minimum: 0
                 maximum: 10
-                description: Leave empty for 0, or to keep the current number.
+                description: 'Default: 0'
               requireSignatures:
                 title: Require Commit Signatures
                 type: boolean
                 ui:widget: radio
-                description: Leave empty for no, or to keep the current setting.
+                description: 'Default: no'
 
       dependencies:
         protectedBranches:
@@ -165,23 +154,23 @@ spec:
                 rulesetName:
                   title: Ruleset Name
                   type: string
-                  description: Name for the ruleset in GitHub. Leave empty for main, or to keep the current name.
+                  description: 'Default: main'
                 enforcement:
                   title: Enforcement Mode
                   type: string
                   enum: [active, evaluate, disabled]
-                  description: 'active: enforce rules, evaluate: dry-run only, disabled: off. Leave empty for active, or to keep the current mode.'
+                  description: 'evaluate is a dry run. Default: active'
                 requiredApprovals:
                   title: Required Approvals
                   type: integer
                   minimum: 0
                   maximum: 10
-                  description: Approvals needed before a pull request can be merged. Leave empty for 0, or to keep the current number.
+                  description: 'Default: 0'
                 requireSignatures:
                   title: Require Commit Signatures
                   type: boolean
                   ui:widget: radio
-                  description: Require commits to be signed (GPG/SSH). Leave empty for no, or to keep the current setting.
+                  description: 'GPG or SSH. Default: no'
 
             - properties:
                 protectedBranches:
@@ -214,11 +203,11 @@ spec:
                 default: private
 
     - title: Secrets
-      description: Optional. Skip this if the repository doesn't need credentials.
+      description: Optional.
       properties:
         secrets:
           title: Secrets
-          description: Need one that isn't listed? Open an issue with EIO.
+          description: Missing one? Open an issue with EIO.
           type: array
           default: []
           uniqueItems: true

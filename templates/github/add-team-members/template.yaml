@@ -16,6 +16,7 @@ spec:
 
   parameters:
     - title: Team Details
+      description: Empty fields keep their current value.
       required:
         - org
         - team
@@ -23,7 +24,6 @@ spec:
         org:
           title: GitHub Organization
           type: string
-          description: Which org is this team in?
           enum: [rancherlabs, rancher, rancher-eio, harvester, neuvector, rancher-sandbox]
           default: rancherlabs
           ui:autofocus: true
@@ -32,29 +32,26 @@ spec:
           title: Team Name
           type: string
           pattern: '^[a-z0-9][a-z0-9-]*$'
-          ui:help: Lowercase letters, numbers and hyphens only, e.g. eio
+          ui:help: Lowercase letters, numbers and hyphens
 
         create:
           title: Create the team
           type: boolean
           default: true
-          description: >-
-            Untick if the team already exists. Editing an existing team's
-            description or parent only works if it's already in the org repo.
+          description: Leave unticked for an existing team.
 
         description:
           title: Description
           type: string
-          description: Optional. For an existing team, leave empty to keep the current value.
 
         parentTeam:
           title: Parent Team
           type: string
           pattern: '^[a-z0-9][a-z0-9-]*$'
-          ui:help: Optional. Slug of an existing team to nest this one under. For an existing team, leave empty to keep the current value.
+          ui:help: Optional. Team slug to nest this one under.
 
     - title: Members
-      description: Members must already be members of the org.
+      description: Must already be org members.
       properties:
         members:
           title: Team Members
