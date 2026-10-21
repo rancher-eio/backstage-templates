@@ -202,7 +202,7 @@ spec:
           pr: ${{ steps['create-pr'].output.remoteUrl }}
           path: manifests/resources/Team/${{ ((parameters.org == 'rancher') and ('rancher--' + parameters.team) or parameters.team) | lower }}.yaml
           team: ${{ parameters.team }}
-          create: ${{ parameters.create and true or false }}
+          create: ${{ parameters.create and 'yes' or 'no' }}
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
     - id: link-pr

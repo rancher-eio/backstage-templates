@@ -16,10 +16,10 @@ on:
         required: true
         type: string
       create:
-        description: Whether the request asked to create the team
+        description: 'Whether the request asked to create the team, as yes or no'
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: 'no'
       tracking:
         description: 'Requester and tracking issue, as username:issueNumber'
         required: false
@@ -164,7 +164,7 @@ jobs:
             fi
           done
 
-          if [ -z "${OLD_PATH}" ] && [ "${CREATE}" = "true" ]; then
+          if [ -z "${OLD_PATH}" ] && [ "${CREATE}" = "yes" ]; then
             echo "New team, nothing to merge" >> "${GITHUB_STEP_SUMMARY}"
           elif [ -z "${OLD_PATH}" ]; then
             echo "[FATAL] ${OWNER}/${TEAM} is not managed in ${REPO} yet, so it has to be adopted before it can be edited" >&2
