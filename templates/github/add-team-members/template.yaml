@@ -4,7 +4,7 @@ kind: Template
 metadata:
   name: add-team-members
   title: GitHub Team
-  description: Create a GitHub team or add people to an existing one so they get the team's repository access.
+  description: Create a GitHub team, or add people to or edit an existing one.
   tags:
     - github
     - team
@@ -31,7 +31,6 @@ spec:
         team:
           title: Team Name
           type: string
-          description: Team slug
           pattern: '^[a-z0-9][a-z0-9-]*$'
           ui:help: Lowercase letters, numbers and hyphens only, e.g. eio
 
@@ -40,34 +39,19 @@ spec:
           type: boolean
           default: true
           description: >-
-            Untick if the team already exists and you only want to add members.
+            Untick if the team already exists. Editing an existing team's
+            description or parent only works if it's already in the org repo.
 
-      dependencies:
-        create:
-          oneOf:
-            - properties:
-                create:
-                  enum: [true]
-                privacy:
-                  title: Visibility
-                  type: string
-                  description: Who can see this team?
-                  enum: [closed, secret]
-                  enumNames: ['Visible to all org members', 'Secret (only org owners and team members)']
-                  default: closed
-                description:
-                  title: Description
-                  type: string
-                parentTeam:
-                  title: Parent Team
-                  type: string
-                  pattern: '^[a-z0-9][a-z0-9-]*$'
-                  ui:help: 'Optional. Slug of an existing team to nest this one under.'
-              required: [privacy]
+        description:
+          title: Description
+          type: string
+          description: Optional. For an existing team, leave empty to keep the current value.
 
-            - properties:
-                create:
-                  enum: [false]
+        parentTeam:
+          title: Parent Team
+          type: string
+          pattern: '^[a-z0-9][a-z0-9-]*$'
+          ui:help: Optional. Slug of an existing team to nest this one under. For an existing team, leave empty to keep the current value.
 
     - title: Members
       description: Members must already be members of the org.
@@ -106,16 +90,19 @@ spec:
       action: github:issues:create
       input:
         repoUrl: github.com?repo=eio&owner=rancherlabs
-        title: '${{ parameters.create and "Create Team" or "Add Team Members" }} Request: ${{ parameters.org }}/${{ parameters.team }}'
+        title: '${{ parameters.create and "Create Team" or ((parameters.description or parameters.parentTeam) and "Edit Team") or "Add Team Members" }} Request: ${{ parameters.org }}/${{ parameters.team }}'
         body: |
-          ## ${{ parameters.create and "Create Team" or "Add Team Members" }} Request
+          ## ${{ parameters.create and "Create Team" or ((parameters.description or parameters.parentTeam) and "Edit Team") or "Add Team Members" }} Request
 
           **Team:** `${{ parameters.org }}/${{ parameters.team }}`
           {%- if parameters.create %}
           **New team:** yes
           **Description:** ${{ parameters.description or '_none_' }}
-          **Visibility:** ${{ parameters.privacy }}
           **Parent team:** ${{ parameters.parentTeam or '_none_' }}
+          {%- elif parameters.description or parameters.parentTeam %}
+          **Settings change:** yes
+          **Description:** ${{ parameters.description or '_unchanged_' }}
+          **Parent team:** ${{ parameters.parentTeam or '_unchanged_' }}
           {%- endif %}
           **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
@@ -137,7 +124,7 @@ spec:
 
     - id: template-team
       name: Preparing Team manifest
-      if: ${{ parameters.create }}
+      if: ${{ parameters.create or parameters.description or parameters.parentTeam }}
       action: fetch:template
       input:
         url: ./content/team
@@ -146,7 +133,7 @@ spec:
           org: ${{ parameters.org }}
           team: ${{ parameters.team }}
           description: ${{ parameters.description }}
-          privacy: ${{ parameters.privacy or 'closed' }}
+          privacy: ${{ parameters.create and 'closed' or '' }}
           parentTeam: ${{ parameters.parentTeam }}
           resourceName: ${{ ((parameters.org == 'rancher') and ('rancher--' + parameters.team) or parameters.team) | lower }}
           requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
@@ -174,11 +161,12 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?repo=org&owner=${{ parameters.org }}
-        branchName: ${{ parameters.create and "Team" or "TeamMembership" }}/${{ parameters.team }}-${{ steps['create-issue'].output.issueNumber }}
+        branchName: ${{ (parameters.create or parameters.description or parameters.parentTeam) and "Team" or "TeamMembership" }}/${{ parameters.team }}-${{ steps['create-issue'].output.issueNumber }}
         update: true
-        title: ':robot: ${{ parameters.create and "Create Team" or "Add Team Members" }}: ${{ parameters.org }}/${{ parameters.team }}'
+        draft: ${{ (parameters.create or parameters.description or parameters.parentTeam) and true or false }}
+        title: ':robot: ${{ parameters.create and "Create Team" or ((parameters.description or parameters.parentTeam) and "Edit Team") or "Add Team Members" }}: ${{ parameters.org }}/${{ parameters.team }}'
         description: |
-          ## ${{ parameters.create and "Create Team" or "Add Team Members" }} Request
+          ## ${{ parameters.create and "Create Team" or ((parameters.description or parameters.parentTeam) and "Edit Team") or "Add Team Members" }} Request
 
           **Tracking issue:** rancherlabs/eio#${{ steps['create-issue'].output.issueNumber }}
 
@@ -190,13 +178,32 @@ spec:
           {%- if parameters.create %}
           - **New team:** yes
           - **Description:** ${{ parameters.description or '_none_' }}
-          - **Visibility:** ${{ parameters.privacy }}
           - **Parent team:** ${{ parameters.parentTeam or '_none_' }}
+          {%- elif parameters.description or parameters.parentTeam %}
+          - **Settings change:** yes
+          - **Description:** ${{ parameters.description or '_unchanged_' }}
+          - **Parent team:** ${{ parameters.parentTeam or '_unchanged_' }}
           {%- endif %}
           - **Members:** ${{ parameters.members.length or 0 }}
 
           ### Justification
           ${{ parameters.justification or '_none_' }}
+
+    - id: merge-team
+      name: Keeping existing team settings
+      if: ${{ parameters.create or parameters.description or parameters.parentTeam }}
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=backstage-templates&owner=rancher-eio
+        workflowId: merge-team-request.yaml
+        branchOrTagName: main
+        returnWorkflowRunDetails: true
+        workflowInputs:
+          pr: ${{ steps['create-pr'].output.remoteUrl }}
+          path: manifests/resources/Team/${{ ((parameters.org == 'rancher') and ('rancher--' + parameters.team) or parameters.team) | lower }}.yaml
+          team: ${{ parameters.team }}
+          create: ${{ parameters.create and true or false }}
+          tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
 
     - id: link-pr
       name: Linking PR to the tracking issue
@@ -208,7 +215,7 @@ spec:
         workflowInputs:
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
           prUrl: ${{ steps['create-pr'].output.remoteUrl }}
-          summary: ${{ parameters.create and ("Creates `" + parameters.org + "/" + parameters.team + "`") or ("Updates `" + parameters.org + "/" + parameters.team + "`") }}${{ (parameters.members and parameters.members.length > 0) and (" and adds " + parameters.members.length + " member(s)") or "" }}.
+          summary: ${{ parameters.create and ("Creates `" + parameters.org + "/" + parameters.team + "`") or ((parameters.description or parameters.parentTeam) and ("Edits `" + parameters.org + "/" + parameters.team + "`")) or ("Updates `" + parameters.org + "/" + parameters.team + "`") }}${{ (parameters.members and parameters.members.length > 0) and (" and adds " + parameters.members.length + " member(s)") or "" }}.
 
   output:
     text:

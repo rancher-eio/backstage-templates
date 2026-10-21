@@ -19,7 +19,9 @@ spec:
     {%- if values.description %}
     description: ${{ values.description | dump }}
     {%- endif %}
+    {%- if values.privacy %}
     privacy: ${{ values.privacy }}
+    {%- endif %}
     {%- if values.parentTeam %}
     parentTeamId: ${{ values.parentTeam }}
     {%- endif %}
