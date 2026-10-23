@@ -34,11 +34,11 @@ spec:
           type: string
           description: Name of the repository (without org prefix)
           pattern: '^[A-Za-z0-9][A-Za-z0-9._-]*$'
-          ui:help: Letters, numbers, dots, hyphens and underscores only
           ui:field: GithubLookup
           ui:options:
             resource: repos
             allowNew: true
+            createField: create
 
         create:
           title: Create the repository
@@ -84,7 +84,6 @@ spec:
                 title: Team
                 type: string
                 pattern: '^[a-z0-9][a-z0-9-]*$'
-                ui:help: 'Team slug, e.g. eio'
                 ui:field: GithubLookup
                 ui:options:
                   resource: teams

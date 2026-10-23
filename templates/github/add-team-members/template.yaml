@@ -32,11 +32,11 @@ spec:
           title: Team Name
           type: string
           pattern: '^[a-z0-9][a-z0-9-]*$'
-          ui:help: Lowercase letters, numbers and hyphens
           ui:field: GithubLookup
           ui:options:
             resource: teams
             allowNew: true
+            createField: create
 
         create:
           title: Create the team
@@ -60,22 +60,6 @@ spec:
     - title: Members
       description: Must already be org members.
       properties:
-        usernames:
-          title: Paste Usernames
-          type: string
-          pattern: '^[A-Za-z0-9@,\s-]*$'
-          ui:field: GithubUsernames
-          ui:options:
-            rows: 4
-          ui:help: Several GitHub usernames at once, separated by spaces, commas or new lines.
-
-        usernamesRole:
-          title: Role for Pasted Usernames
-          type: string
-          enum: [member, maintainer]
-          default: member
-          ui:help: 'maintainer can also manage the team''s members'
-
         members:
           title: Team Members
           type: array
@@ -97,6 +81,21 @@ spec:
                 enum: [member, maintainer]
                 default: member
                 ui:help: 'maintainer can also manage the team''s members'
+
+        usernames:
+          title: Or paste usernames
+          type: string
+          pattern: '^[A-Za-z0-9@,\s-]*$'
+          ui:field: GithubUsernames
+          ui:options:
+            rows: 2
+          ui:help: Separated by spaces, commas or new lines.
+
+        usernamesRole:
+          title: Role for pasted usernames
+          type: string
+          enum: [member, maintainer]
+          default: member
 
     - title: Additional Information
       properties:
