@@ -1,0 +1,32 @@
+---
+apiVersion: eio.rancher.engineering/v1alpha1
+kind: TeamMembers
+metadata:
+  name: ${{ values.resourceName }}
+  {%- if values.requestedBy or values.issueNumber %}
+  annotations:
+    {%- if values.requestedBy %}
+    github.eio.rancher.engineering/requested-by: "${{ values.requestedBy }}"
+    {%- endif %}
+    {%- if values.issueNumber %}
+    github.eio.rancher.engineering/issue-number: "${{ values.issueNumber }}"
+    {%- endif %}
+  {%- endif %}
+spec:
+  org: ${{ values.org }}
+  team: ${{ values.team }}
+  members:
+  {%- set listed = ((values.members or []) | join(',', 'username') | lower).split(',') %}
+  {%- set pasted = ((values.pasted or []) | join(',') | lower).split(',') %}
+  {%- for member in values.members or [] %}
+  {%- if listed.indexOf(member.username | lower) == loop.index0 %}
+  - username: ${{ member.username }}
+    role: ${{ member.role or 'member' }}
+  {%- endif %}
+  {%- endfor %}
+  {%- for username in values.pasted or [] %}
+  {%- if listed.indexOf(username | lower) == -1 and pasted.indexOf(username | lower) == loop.index0 %}
+  - username: ${{ username }}
+    role: ${{ values.pastedRole or 'member' }}
+  {%- endif %}
+  {%- endfor %}

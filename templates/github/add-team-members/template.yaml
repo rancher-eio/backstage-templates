@@ -33,6 +33,10 @@ spec:
           type: string
           pattern: '^[a-z0-9][a-z0-9-]*$'
           ui:help: Lowercase letters, numbers and hyphens
+          ui:field: GithubLookup
+          ui:options:
+            resource: teams
+            allowNew: true
 
         create:
           title: Create the team
@@ -49,10 +53,29 @@ spec:
           type: string
           pattern: '^[a-z0-9][a-z0-9-]*$'
           ui:help: Optional. Team slug to nest this one under.
+          ui:field: GithubLookup
+          ui:options:
+            resource: teams
 
     - title: Members
       description: Must already be org members.
       properties:
+        usernames:
+          title: Paste Usernames
+          type: string
+          pattern: '^[A-Za-z0-9@,\s-]*$'
+          ui:field: GithubUsernames
+          ui:options:
+            rows: 4
+          ui:help: Several GitHub usernames at once, separated by spaces, commas or new lines.
+
+        usernamesRole:
+          title: Role for Pasted Usernames
+          type: string
+          enum: [member, maintainer]
+          default: member
+          ui:help: 'maintainer can also manage the team''s members'
+
         members:
           title: Team Members
           type: array
@@ -65,6 +88,9 @@ spec:
                 title: GitHub Username
                 type: string
                 pattern: '^[A-Za-z0-9][A-Za-z0-9-]*$'
+                ui:field: GithubLookup
+                ui:options:
+                  resource: members
               role:
                 title: Role
                 type: string
@@ -104,9 +130,16 @@ spec:
           **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
           ### Members
-          {%- if parameters.members and parameters.members.length > 0 %}
-          {%- for member in parameters.members %}
+          {%- set pasted = (parameters.usernames or '').match(r/[A-Za-z0-9][A-Za-z0-9-]*/g) or [] %}
+          {%- set listed = (',' + ((parameters.members or []) | join(',', 'username')) + ',') | lower %}
+          {%- if (parameters.members and parameters.members.length > 0) or pasted.length > 0 %}
+          {%- for member in parameters.members or [] %}
           - `${{ member.username }}` (${{ member.role or 'member' }})
+          {%- endfor %}
+          {%- for username in pasted %}
+          {%- if (',' + (username | lower) + ',') not in listed and pasted.indexOf(username) == loop.index0 %}
+          - `${{ username }}` (${{ parameters.usernamesRole or 'member' }})
+          {%- endif %}
           {%- endfor %}
           {%- else %}
           _none_
@@ -136,20 +169,20 @@ spec:
           requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
           issueNumber: ${{ steps['create-issue'].output.issueNumber }}
 
-    - id: template-manifest
-      name: Preparing TeamMembership manifests
-      if: ${{ parameters.members and parameters.members.length > 0 }}
-      each: ${{ parameters.members }}
+    - id: template-members
+      name: Preparing TeamMembers manifest
+      if: ${{ (parameters.members and parameters.members.length > 0) or (parameters.usernames and parameters.usernames.match(r/[A-Za-z0-9][A-Za-z0-9-]*/g)) }}
       action: fetch:template
       input:
-        url: ./content/membership
-        targetPath: ./manifests/resources/TeamMembership
+        url: ./content/members
+        targetPath: ./manifests/resources/TeamMembers
         values:
           org: ${{ parameters.org }}
           team: ${{ parameters.team }}
-          username: ${{ each.value.username }}
-          role: ${{ each.value.role or 'member' }}
-          resourceName: ${{ ((parameters.org == 'rancher') and ('rancher--' + parameters.team + '--' + each.value.username) or (parameters.team + '--' + each.value.username)) | lower }}
+          members: ${{ parameters.members or [] }}
+          pasted: ${{ (parameters.usernames or '').match(r/[A-Za-z0-9][A-Za-z0-9-]*/g) or [] }}
+          pastedRole: ${{ parameters.usernamesRole or 'member' }}
+          resourceName: ${{ ((parameters.org == 'rancher') and ('rancher--' + parameters.team) or parameters.team) | lower }}
           requestedBy: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
           issueNumber: ${{ steps['create-issue'].output.issueNumber }}
 
@@ -158,9 +191,9 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?repo=org&owner=${{ parameters.org }}
-        branchName: ${{ (parameters.create or parameters.description or parameters.parentTeam) and "Team" or "TeamMembership" }}/${{ parameters.team }}-${{ steps['create-issue'].output.issueNumber }}
+        branchName: ${{ (parameters.create or parameters.description or parameters.parentTeam) and "Team" or "TeamMembers" }}/${{ parameters.team }}-${{ steps['create-issue'].output.issueNumber }}
         update: true
-        draft: ${{ (parameters.create or parameters.description or parameters.parentTeam) and true or false }}
+        draft: true
         title: ':robot: ${{ parameters.create and "Create Team" or ((parameters.description or parameters.parentTeam) and "Edit Team") or "Add Team Members" }}: ${{ parameters.org }}/${{ parameters.team }}'
         description: |
           ## ${{ parameters.create and "Create Team" or ((parameters.description or parameters.parentTeam) and "Edit Team") or "Add Team Members" }} Request
@@ -181,14 +214,29 @@ spec:
           - **Description:** ${{ parameters.description or '_unchanged_' }}
           - **Parent team:** ${{ parameters.parentTeam or '_unchanged_' }}
           {%- endif %}
-          - **Members:** ${{ parameters.members.length or 0 }}
+
+          ### Members
+          {%- set pasted = (parameters.usernames or '').match(r/[A-Za-z0-9][A-Za-z0-9-]*/g) or [] %}
+          {%- set listed = (',' + ((parameters.members or []) | join(',', 'username')) + ',') | lower %}
+          {%- if (parameters.members and parameters.members.length > 0) or pasted.length > 0 %}
+          {%- for member in parameters.members or [] %}
+          - `${{ member.username }}` (${{ member.role or 'member' }})
+          {%- endfor %}
+          {%- for username in pasted %}
+          {%- if (',' + (username | lower) + ',') not in listed and pasted.indexOf(username) == loop.index0 %}
+          - `${{ username }}` (${{ parameters.usernamesRole or 'member' }})
+          {%- endif %}
+          {%- endfor %}
+          {%- else %}
+          _none_
+          {%- endif %}
 
           ### Justification
           ${{ parameters.justification or '_none_' }}
 
     - id: merge-team
-      name: Keeping existing team settings
-      if: ${{ parameters.create or parameters.description or parameters.parentTeam }}
+      name: Keeping existing team settings and members
+      if: ${{ parameters.create or parameters.description or parameters.parentTeam or (parameters.members and parameters.members.length > 0) or (parameters.usernames and parameters.usernames.match(r/[A-Za-z0-9][A-Za-z0-9-]*/g)) }}
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=backstage-templates&owner=rancher-eio
@@ -197,7 +245,8 @@ spec:
         returnWorkflowRunDetails: true
         workflowInputs:
           pr: ${{ steps['create-pr'].output.remoteUrl }}
-          path: manifests/resources/Team/${{ ((parameters.org == 'rancher') and ('rancher--' + parameters.team) or parameters.team) | lower }}.yaml
+          path: ${{ (parameters.create or parameters.description or parameters.parentTeam) and ('manifests/resources/Team/' + (((parameters.org == 'rancher') and ('rancher--' + parameters.team) or parameters.team) | lower) + '.yaml') or '' }}
+          members: ${{ ((parameters.members and parameters.members.length > 0) or (parameters.usernames and parameters.usernames.match(r/[A-Za-z0-9][A-Za-z0-9-]*/g))) and ('manifests/resources/TeamMembers/' + (((parameters.org == 'rancher') and ('rancher--' + parameters.team) or parameters.team) | lower) + '.yaml') or '' }}
           team: ${{ parameters.team }}
           create: ${{ parameters.create and 'yes' or 'no' }}
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
@@ -212,7 +261,7 @@ spec:
         workflowInputs:
           tracking: ${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}:${{ steps['create-issue'].output.issueNumber }}
           prUrl: ${{ steps['create-pr'].output.remoteUrl }}
-          summary: ${{ parameters.create and ("Creates `" + parameters.org + "/" + parameters.team + "`") or ((parameters.description or parameters.parentTeam) and ("Edits `" + parameters.org + "/" + parameters.team + "`")) or ("Updates `" + parameters.org + "/" + parameters.team + "`") }}${{ (parameters.members and parameters.members.length > 0) and (" and adds " + parameters.members.length + " member(s)") or "" }}.
+          summary: ${{ parameters.create and ("Creates `" + parameters.org + "/" + parameters.team + "`") or ((parameters.description or parameters.parentTeam) and ("Edits `" + parameters.org + "/" + parameters.team + "`")) or ("Updates `" + parameters.org + "/" + parameters.team + "`") }}${{ ((parameters.members and parameters.members.length > 0) or (parameters.usernames and parameters.usernames.match(r/[A-Za-z0-9][A-Za-z0-9-]*/g))) and " and adds team members" or "" }}.
 
   output:
     text:

@@ -8,9 +8,15 @@ on:
         required: true
         type: string
       path:
-        description: Path of the Team manifest in that pull request
-        required: true
+        description: Path of the Team manifest in that pull request, empty when the team settings are unchanged
+        required: false
         type: string
+        default: ''
+      members:
+        description: Path of the TeamMembers manifest in that pull request, empty when no members are added
+        required: false
+        type: string
+        default: ''
       team:
         description: Slug of the team in the request
         required: true
@@ -41,6 +47,15 @@ env:
     $old
     | .metadata.annotations = ((.metadata.annotations // {}) * ($new.metadata.annotations // {}))
     | .spec.forProvider = (.spec.forProvider * ($new.spec.forProvider | del(.name)))
+  MERGE_MEMBERS: |
+    load(strenv(OLD)) as $old |
+    load(strenv(NEW)) as $new |
+    $old
+    | .metadata.annotations = ((.metadata.annotations // {}) * ($new.metadata.annotations // {}))
+    | .spec.members = (
+        (($old.spec.members // []) | map(. as $o | (($new.spec.members // []) | map(select((.username | downcase) == ($o.username | downcase))) | .[0]) as $n | $o * (($n // {}) | del(.username))))
+        + (($new.spec.members // []) | map(. as $n | select((($old.spec.members // []) | map(select((.username | downcase) == ($n.username | downcase))) | length) == 0)))
+      )
 
 jobs:
   main:
@@ -51,6 +66,7 @@ jobs:
         env:
           PR: ${{ inputs.pr }}
           MANIFEST: ${{ inputs.path }}
+          MEMBERS: ${{ inputs.members }}
           TEAM: ${{ inputs.team }}
           TRACKING: ${{ inputs.tracking }}
         run: |
@@ -72,14 +88,32 @@ jobs:
             ''|*[!0-9]*) echo "[FATAL] invalid pull request number" >&2; exit 1 ;;
           esac
 
-          case "${MANIFEST}" in
-            manifests/resources/Team/*.yaml) ;;
-            *) echo "[FATAL] invalid path" >&2; exit 1 ;;
-          esac
+          if [ -z "${MANIFEST}" ] && [ -z "${MEMBERS}" ]; then
+            echo "[FATAL] nothing to merge" >&2
+            exit 1
+          fi
 
-          case "${MANIFEST#manifests/resources/Team/}" in
-            .*|*/*|*[!A-Za-z0-9._-]*) echo "[FATAL] invalid path" >&2; exit 1 ;;
-          esac
+          if [ -n "${MANIFEST}" ]; then
+            case "${MANIFEST}" in
+              manifests/resources/Team/*.yaml) ;;
+              *) echo "[FATAL] invalid path" >&2; exit 1 ;;
+            esac
+
+            case "${MANIFEST#manifests/resources/Team/}" in
+              .*|*/*|*[!A-Za-z0-9._-]*) echo "[FATAL] invalid path" >&2; exit 1 ;;
+            esac
+          fi
+
+          if [ -n "${MEMBERS}" ]; then
+            case "${MEMBERS}" in
+              manifests/resources/TeamMembers/*.yaml) ;;
+              *) echo "[FATAL] invalid members path" >&2; exit 1 ;;
+            esac
+
+            case "${MEMBERS#manifests/resources/TeamMembers/}" in
+              .*|*/*|*[!A-Za-z0-9._-]*) echo "[FATAL] invalid members path" >&2; exit 1 ;;
+            esac
+          fi
 
           case "${TEAM}" in
             ''|-*|*[!a-z0-9-]*) echo "[FATAL] invalid team" >&2; exit 1 ;;
@@ -131,13 +165,14 @@ jobs:
 
           printf 'formatter:\n  include_document_start: true\n  indentless_arrays: true\n' > "${RUNNER_TEMP}/yamlfmt.yaml"
 
-      - name: Read the request and the team's current manifest
+      - name: Read the request and the team's current manifests
         id: read
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
           OWNER: ${{ steps.inputs.outputs.owner }}
           NUMBER: ${{ steps.inputs.outputs.number }}
           MANIFEST: ${{ inputs.path }}
+          MEMBERS: ${{ inputs.members }}
           TEAM: ${{ inputs.team }}
           CREATE: ${{ inputs.create }}
         run: |
@@ -152,44 +187,78 @@ jobs:
           HEAD="$(jq -r .headRefOid pr.json)"
           BASE="$(jq -r .baseRefName pr.json)"
 
-          gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${MANIFEST}?ref=${HEAD}" > new.yaml
-
-          if ! gh api "repos/${REPO}/contents/manifests/resources/Team?ref=${BASE}" > teams.json 2> fetch.err; then
-            if ! grep -q "HTTP 404" fetch.err; then
-              cat fetch.err >&2
-              exit 1
+          list_dir() {
+            if ! gh api "repos/${REPO}/contents/$1?ref=${BASE}" > "$2" 2> fetch.err; then
+              if ! grep -q "HTTP 404" fetch.err; then
+                cat fetch.err >&2
+                exit 1
+              fi
+              echo '[]' > "$2"
             fi
-            echo '[]' > teams.json
-          fi
+          }
 
           OLD_PATH=""
-          for FILE in $(jq -r '.[] | select(.type == "file" and (.name | test("\\.ya?ml$"))) | .path' teams.json); do
-            gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${FILE}?ref=${BASE}" > candidate.yaml
-            if [ "$(TEAM="${TEAM}" OWNER="${OWNER}" yq 'select(.kind == "Team" and .spec.forProvider.name == strenv(TEAM) and .spec.providerConfigRef.name == strenv(OWNER)) | "match"' candidate.yaml)" = "match" ]; then
-              OLD_PATH="${FILE}"
-              mv candidate.yaml old.yaml
-              break
-            fi
-          done
+          if [ -n "${MANIFEST}" ]; then
+            gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${MANIFEST}?ref=${HEAD}" > new.yaml
 
-          if [ -z "${OLD_PATH}" ] && [ "${CREATE}" = "yes" ]; then
-            echo "New team, nothing to merge" >> "${GITHUB_STEP_SUMMARY}"
-          elif [ -z "${OLD_PATH}" ]; then
-            echo "[FATAL] ${OWNER}/${TEAM} is not managed in ${REPO} yet, so it has to be adopted before it can be edited" >&2
-            exit 1
+            list_dir manifests/resources/Team teams.json
+            for FILE in $(jq -r '.[] | select(.type == "file" and (.name | test("\\.ya?ml$"))) | .path' teams.json); do
+              gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${FILE}?ref=${BASE}" > candidate.yaml
+              if [ "$(TEAM="${TEAM}" OWNER="${OWNER}" yq 'select(.kind == "Team" and .spec.forProvider.name == strenv(TEAM) and .spec.providerConfigRef.name == strenv(OWNER)) | "match"' candidate.yaml)" = "match" ]; then
+                OLD_PATH="${FILE}"
+                mv candidate.yaml old.yaml
+                break
+              fi
+            done
+
+            if [ -z "${OLD_PATH}" ] && [ "${CREATE}" = "yes" ]; then
+              echo "New team, nothing to merge" >> "${GITHUB_STEP_SUMMARY}"
+            elif [ -z "${OLD_PATH}" ]; then
+              echo "[FATAL] ${OWNER}/${TEAM} is not managed in ${REPO} yet, so it has to be adopted before it can be edited" >&2
+              exit 1
+            fi
+
+            [ -n "${OLD_PATH}" ] && echo "Merging into ${OLD_PATH}" >> "${GITHUB_STEP_SUMMARY}"
           fi
 
-          [ -n "${OLD_PATH}" ] && echo "Merging into ${OLD_PATH}" >> "${GITHUB_STEP_SUMMARY}"
+          OLD_MEMBERS_PATH=""
+          if [ -n "${MEMBERS}" ]; then
+            gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${MEMBERS}?ref=${HEAD}" > new-members.yaml
+
+            list_dir manifests/resources/TeamMembers members.json
+            for FILE in $(jq -r '.[] | select(.type == "file" and (.name | test("\\.ya?ml$"))) | .path' members.json); do
+              gh api -H "Accept: application/vnd.github.raw" "repos/${REPO}/contents/${FILE}?ref=${BASE}" > candidate.yaml
+              if [ "$(TEAM="${TEAM}" OWNER="${OWNER}" yq 'select(.kind == "TeamMembers" and .spec.team == strenv(TEAM) and .spec.org == strenv(OWNER)) | "match"' candidate.yaml)" = "match" ]; then
+                OLD_MEMBERS_PATH="${FILE}"
+                mv candidate.yaml old-members.yaml
+                break
+              fi
+            done
+
+            if [ -n "${OLD_MEMBERS_PATH}" ]; then
+              echo "Merging members into ${OLD_MEMBERS_PATH}" >> "${GITHUB_STEP_SUMMARY}"
+            else
+              echo "New members list, nothing to merge" >> "${GITHUB_STEP_SUMMARY}"
+            fi
+          fi
+
           echo "branch=$(jq -r .headRefName pr.json)" >> "${GITHUB_OUTPUT}"
           echo "head=${HEAD}" >> "${GITHUB_OUTPUT}"
           echo "draft=$(jq -r .isDraft pr.json)" >> "${GITHUB_OUTPUT}"
           echo "old_path=${OLD_PATH}" >> "${GITHUB_OUTPUT}"
+          echo "old_members_path=${OLD_MEMBERS_PATH}" >> "${GITHUB_OUTPUT}"
 
       - name: Merge
         if: ${{ steps.read.outputs.old_path != '' }}
         run: |
           OLD=old.yaml NEW=new.yaml yq --null-input "${MERGE}" > merged.yaml
           yamlfmt -conf "${RUNNER_TEMP}/yamlfmt.yaml" merged.yaml
+
+      - name: Merge members
+        if: ${{ steps.read.outputs.old_members_path != '' }}
+        run: |
+          OLD=old-members.yaml NEW=new-members.yaml yq --null-input "${MERGE_MEMBERS}" > merged-members.yaml
+          yamlfmt -conf "${RUNNER_TEMP}/yamlfmt.yaml" merged-members.yaml
 
       - name: Push the merged request
         if: ${{ steps.read.outputs.old_path != '' }}
@@ -223,6 +292,40 @@ jobs:
           {
             echo '```diff'
             diff -u old.yaml merged.yaml || true
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Push the merged members
+        if: ${{ steps.read.outputs.old_members_path != '' }}
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          OWNER: ${{ steps.inputs.outputs.owner }}
+          MEMBERS: ${{ inputs.members }}
+          OLD_PATH: ${{ steps.read.outputs.old_members_path }}
+          BRANCH: ${{ steps.read.outputs.branch }}
+        run: |
+          REPO="${OWNER}/org"
+
+          OLD_BLOB="$(gh api "repos/${REPO}/contents/${OLD_PATH}?ref=${BRANCH}" --jq .sha)"
+          gh api --method PUT "repos/${REPO}/contents/${OLD_PATH}" \
+            -f message=":robot: keeps the team's existing members" \
+            -f content="$(base64 --wrap=0 merged-members.yaml)" \
+            -f sha="${OLD_BLOB}" \
+            -f branch="${BRANCH}" \
+            > /dev/null
+
+          if [ "${OLD_PATH}" != "${MEMBERS}" ]; then
+            NEW_BLOB="$(gh api "repos/${REPO}/contents/${MEMBERS}?ref=${BRANCH}" --jq .sha)"
+            gh api --method DELETE "repos/${REPO}/contents/${MEMBERS}" \
+              -f message=":robot: keeps the members in their existing file" \
+              -f sha="${NEW_BLOB}" \
+              -f branch="${BRANCH}" \
+              > /dev/null
+          fi
+
+          {
+            echo '```diff'
+            diff -u old-members.yaml merged-members.yaml || true
             echo '```'
           } >> "${GITHUB_STEP_SUMMARY}"
 
