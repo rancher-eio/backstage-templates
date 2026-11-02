@@ -3,7 +3,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: cloudfront-analytics
-  title: 'Observability: CloudFront Analytics'
+  title: observability-cloudfront-analytics
   description: CloudFront analytics collector
   annotations:
     backstage.io/kubernetes-id: cloudfront-analytics
