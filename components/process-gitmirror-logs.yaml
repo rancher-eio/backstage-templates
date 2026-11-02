@@ -1,0 +1,13 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: process-gitmirror-logs
+  description: Processes git-mirror logs into metrics (git-metrics image)
+  annotations:
+    backstage.io/kubernetes-id: process-gitmirror-logs
+spec:
+  type: service
+  lifecycle: production
+  owner: telemetry
+  system: applications

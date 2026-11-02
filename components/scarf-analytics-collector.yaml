@@ -1,0 +1,13 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: scarf-analytics-collector
+  description: Scarf analytics collector
+  annotations:
+    backstage.io/kubernetes-id: scarf-analytics-collector
+spec:
+  type: service
+  lifecycle: production
+  owner: telemetry
+  system: applications
