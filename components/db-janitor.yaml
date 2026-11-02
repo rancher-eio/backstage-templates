@@ -1,0 +1,14 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: db-janitor
+  title: 'Observability: DB Janitor'
+  description: Scarf analytics database janitor
+  annotations:
+    backstage.io/kubernetes-id: db-janitor
+spec:
+  type: service
+  lifecycle: production
+  owner: telemetry
+  system: observability

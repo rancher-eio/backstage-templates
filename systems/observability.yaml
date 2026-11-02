@@ -1,0 +1,14 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: observability
+  title: Observability
+  description: Analytics collectors and log processors running in the observability namespace
+  tags:
+    - observability
+    - analytics
+  annotations:
+    github.com/team-slug: rancher-eio/eio
+spec:
+  owner: eio
