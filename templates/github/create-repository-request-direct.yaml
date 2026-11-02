@@ -356,7 +356,6 @@ spec:
         repoUrl: github.com?repo=org&owner=${{ parameters.org }}
         branchName: RepositoryRequest/${{ parameters.name }}
         update: true
-        draft: true
         title: ':robot: Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
         description: |
           ## Create Repository Request

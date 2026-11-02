@@ -3,7 +3,7 @@ apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: observability
-  title: Observability
+  title: observability
   description: Analytics collectors and log processors running in the observability namespace
   tags:
     - observability
