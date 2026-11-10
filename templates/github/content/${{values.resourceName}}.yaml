@@ -26,6 +26,12 @@ spec:
     {%- if values.description %}
     description: "${{ values.description }}"
     {%- endif %}
+    {%- if values.forkFrom %}
+    {%- set source = values.forkFrom.split('/') %}
+    fork: "true"
+    sourceOwner: ${{ source[0] }}
+    sourceRepo: ${{ source[1] }}
+    {%- endif %}
   {%- endif %}
   {%- if values.teams and values.teams.length > 0 %}
   teams:

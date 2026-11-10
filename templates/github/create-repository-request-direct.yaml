@@ -56,6 +56,11 @@ spec:
                 description:
                   title: Description
                   type: string
+                forkFrom:
+                  title: Fork From
+                  type: string
+                  pattern: '^[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+$'
+                  description: 'Optional upstream to fork, as owner/repo. e.g. fluent/fluent-bit. Forks of public repos must stay public.'
               required: [visibility]
 
             - properties:
@@ -259,6 +264,7 @@ spec:
           **Organization:** ${{ parameters.org }}
           **New repository:** ${{ parameters.create and 'yes' or 'no, adopting an existing one' }}
           **Visibility:** ${{ parameters.visibility and '`' + parameters.visibility + '`' or '_unchanged_' }}
+          **Fork of:** ${{ parameters.forkFrom and '`' + parameters.forkFrom + '`' or '_not a fork_' }}
           **Requested by:** @${{ user.entity.metadata.name or (user.ref | replace("user:default/", "")) or "unknown" }}
 
           ### Description
@@ -337,6 +343,7 @@ spec:
           create: ${{ parameters.create }}
           visibility: ${{ parameters.visibility }}
           description: ${{ parameters.description }}
+          forkFrom: ${{ parameters.forkFrom }}
           teams: ${{ parameters.teams }}
           collaborators: ${{ parameters.collaborators }}
           protectedBranches: ${{ parameters.protectedBranches }}
@@ -356,6 +363,7 @@ spec:
         repoUrl: github.com?repo=org&owner=${{ parameters.org }}
         branchName: RepositoryRequest/${{ parameters.name }}
         update: true
+        draft: true
         title: ':robot: Create Repository: ${{ parameters.org }}/${{ parameters.name }}'
         description: |
           ## Create Repository Request
@@ -369,6 +377,7 @@ spec:
           - **Repository:** `${{ parameters.name }}`
           - **Create:** ${{ parameters.create and 'yes' or 'not requested' }}
           - **Visibility:** ${{ parameters.visibility or 'unchanged' }}
+          - **Fork of:** ${{ parameters.forkFrom or 'not a fork' }}
           - **Teams:** ${{ parameters.teams.length or 0 }}
           - **Collaborators:** ${{ parameters.collaborators.length or 0 }}
           - **Secrets:** ${{ parameters.secrets.length or 0 }}
