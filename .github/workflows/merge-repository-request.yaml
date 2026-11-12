@@ -122,12 +122,12 @@ jobs:
           NUMBER: ${{ steps.inputs.outputs.number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          BODY="$(gh api "repos/${OWNER}/org/pulls/${NUMBER}" --jq '.body // "" | split("\n") | map(select(startswith("**Merge workflow run:**") | not)) | join("\n")')"
+          BODY="$(gh api "repos/${OWNER}/org/pulls/${NUMBER}" --jq '.body // "" | split("\n") | map(select(startswith("**Automation status:**") | not)) | join("\n")')"
 
           gh api --method PATCH "repos/${OWNER}/org/pulls/${NUMBER}" \
             -f body="${BODY}
 
-          **Merge workflow run:** ${RUN_URL}" \
+          **Automation status:** This PR stays a draft until we confirm it only merges the requested changes and doesn't replace existing values. Still a draft after a few minutes? [See what went wrong](${RUN_URL})" \
             > /dev/null
 
       - name: Generate token for the tracking issue
