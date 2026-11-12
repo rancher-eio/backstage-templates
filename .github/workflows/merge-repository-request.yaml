@@ -114,6 +114,22 @@ jobs:
           owner: ${{ steps.inputs.outputs.owner }}
           repositories: org
 
+      - name: Link this run in the pull request
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          OWNER: ${{ steps.inputs.outputs.owner }}
+          NUMBER: ${{ steps.inputs.outputs.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          BODY="$(gh api "repos/${OWNER}/org/pulls/${NUMBER}" --jq '.body // "" | split("\n") | map(select(startswith("**Merge workflow run:**") | not)) | join("\n")')"
+
+          gh api --method PATCH "repos/${OWNER}/org/pulls/${NUMBER}" \
+            -f body="${BODY}
+
+          **Merge workflow run:** ${RUN_URL}" \
+            > /dev/null
+
       - name: Generate token for the tracking issue
         id: eio-token
         if: ${{ steps.inputs.outputs.issue != '' }}
